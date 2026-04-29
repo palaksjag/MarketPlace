@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J&J Waste Management - Dark</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    
+  :root {
+    --red: #CC0000;
+    --red-light: #2A1010; /* Idk Red maybe*/
+    --red-dark: #990000;
+    --sidebar-w: 190px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+
+    --bg-primary: #1E1E1C;
+    --bg-secondary: #252523; 
+    --bg-tertiary: #141412;  
+    --text-primary: #F0EEE8; 
+    --text-secondary: #A8A69E;
+    --text-tertiary: #6A6864;
+    --border-light: rgba(255,255,255,0.08);
+    --border-med: rgba(255,255,255,0.14);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { 
+    font-family: var(--font); 
+    background: var(--bg-tertiary); 
+    color: var(--text-primary);
+    display: flex; 
+    height: 100vh; 
+    overflow: hidden; 
+  }
+    
+  .sidebar { 
+    width: var(--sidebar-w); 
+    background: var(--bg-primary); 
+    border-right: 1px solid var(--border-light); 
+    display: flex; 
+    flex-direction: column; 
+    flex-shrink: 0; 
+  }
+    
+  .sidebar-brand { padding: 24px 16px; border-bottom: 1px solid var(--border-light); }
+  .logo-img { width: 130px; height: auto; margin-bottom: 8px; display: block; filter: brightness(1.2); }
+  .brand-title { font-size: 11px; font-weight: 600; color: var(--red); letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .nav-items { flex: 1; padding: 10px 0; }
+  .nav-item { 
+    padding: 12px 16px; 
+    color: var(--text-secondary); 
+    cursor: pointer; 
+    font-size: 13px; 
+    transition: 0.2s; 
+  }
+  .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+  .nav-item.active { color: var(--text-primary); font-weight: 600; background: var(--red-light); border-left: 3px solid var(--red); }
+
+  .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+  
+  .topbar { padding: 16px 24px; background: var(--bg-primary); border-bottom: 1px solid var(--border-light); }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+
+  /* Filter */
+  .filter-section { 
+    display: flex; 
+    gap: 32px; 
+    background: var(--bg-primary); 
+    padding: 16px 24px; 
+    border-bottom: 1px solid var(--border-light);
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; }
+  select { 
+    padding: 6px 10px; 
+    border-radius: var(--radius-md); 
+    border: 1px solid var(--border-med); 
+    background: var(--bg-secondary);
+    font-family: var(--font);
+    font-size: 12px;
+    color: var(--text-primary);
+    outline: none;
+  }
+
+  .content-grid { 
+    display: grid; 
+    grid-template-columns: 2fr 1fr; 
+    gap: 20px; 
+    padding: 24px; 
+  }
+    
+  .chart-card { 
+    background: var(--bg-primary); 
+    padding: 24px; /* Increased slightly for bars */
+    border-radius: var(--radius-lg); 
+    border: 1px solid var(--border-light); 
+    height: 360px; 
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-header { font-size: 12px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 16px; }
+  .chart-container { flex: 1; position: relative; width: 100%; }
+
+  .stats-column { display: flex; flex-direction: column; gap: 16px; }
+  .stat-box { 
+    background: var(--bg-primary); 
+    padding: 20px; 
+    border-radius: var(--radius-lg); 
+    border: 1px solid var(--border-light); 
+  }
+  .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+  .stat-value { 
+    font-size: 22px; 
+    font-weight: 600; 
+    color: var(--red); 
+    margin-top: 4px; 
+    font-family: var(--mono); 
+  }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <img src="Johnson & Johnson Logo.png" alt="Logo" class="logo-img">
+      <div class="brand-title">Waste Management</div>
+    </div>
+    <div class="nav-items">
+      <div class="nav-item">Home</div>
+      <div class="nav-item active">Analytics</div>
+      <div class="nav-item">Reports</div>
+      <div class="nav-item">Inquiries</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">Overview</div>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-group">
+            <label>Timeline</label>
+            <select id="timelineSelect" onchange="updateDashboard()">
+                <option value="weekly">Weekly View</option>
+                <option value="monthly">Monthly View</option>
+                <option value="yearly">Yearly View</option>
+            </select>
+        </div>
+      <div class="filter-group">
+        <label>Category</label>
+        <select>
+          <option>All Materials</option>
+          <option>Equipment</option>
+          <option>Chemical</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="chart-card">
+        <div class="chart-header">Waste Collection Trend (kg)</div>
+        <div class="chart-container">
+          <canvas id="wasteChart"></canvas>
+        </div>
+      </div>
+
+      </html><div class="stats-column">
+        <div class="stat-box">
+            <div class="stat-label">Products Restocked</div>
+            <div class="stat-value" id="stat-restocked">1,402</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Waste Collected</div>
+            <div class="stat-value" id="stat-waste">12,840 kg</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Warehouses</div>
+            <div class="stat-value" id="stat-warehouses">08</div>
+        </div>
+    </div>
+  </div>
+
+    <script>
+        const ctx = document.getElementById('wasteChart').getContext('2d');
+        
+        // 1. Map Stuff
+        const dashboardData = {
+            weekly: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7'],
+            chartData: [950, 1200, 1100, 1600, 1400, 2100, 1850],
+            restocked: '1,402',
+            waste: '12,840 kg',
+            warehouses: '08'
+            },
+            monthly: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug'],
+            chartData: [5400, 6200, 5800, 7100, 2000, 7282, 2],
+            restocked: '5,890',
+            waste: '48,210 kg',
+            warehouses: '12'
+            },
+            yearly: {
+            labels: ['2020', '2021', '2022', '2023', '2024', '2025'],
+            chartData: [22000, 25000, 21000, 28000, 31000, 29000],
+            restocked: '72,140',
+            waste: '512,000 kg',
+            warehouses: '15'
+            }
+        };
+
+        // 2. Chart Stuff
+        let wasteChart = new Chart(ctx, {
+            data: {
+            labels: dashboardData.weekly.labels,
+            datasets: [
+                {
+                type: 'line',
+                label: 'Trend',
+                data: dashboardData.weekly.chartData,
+                borderColor: '#CC0000',
+                borderWidth: 2,
+                pointRadius: 3,
+                tension: 0.4,
+                fill: false
+                },
+                {
+                type: 'bar',
+                label: 'Volume',
+                data: dashboardData.weekly.chartData,
+                backgroundColor: 'rgba(204, 0, 0, 0.2)',
+                borderRadius: 4
+                }
+            ]
+            },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false } }
+            }
+            }
+        });
+
+        // 3. Update things
+        function updateDashboard() {
+            const period = document.getElementById('timelineSelect').value;
+            const data = dashboardData[period];
+
+            // Update Chart
+            wasteChart.data.labels = data.labels;
+            wasteChart.data.datasets[0].data = data.chartData;
+            wasteChart.data.datasets[1].data = data.chartData;
+            wasteChart.update();
+
+            // Update Stats
+            document.getElementById('stat-restocked').innerText = data.restocked;
+            document.getElementById('stat-waste').innerText = data.waste;
+            document.getElementById('stat-warehouses').innerText = data.warehouses;
+
+        // Need to make sure to add different pages and top buttons
+        }
+    </script>
+</body>
+</div>
