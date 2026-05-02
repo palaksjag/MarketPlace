@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J&J MarketFlow — Unified Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <style>
+    /* ══════════════════════════════════════════
+       GLOBAL NAV — sits above everything
+    ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    .global-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 48px;
+      background: #CC0000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 99999;
+      font-family: 'DM Sans', 'Inter', sans-serif;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .global-nav-brand {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      white-space: nowrap;
+      font-family: 'DM Mono', monospace;
+    }
+    .global-nav-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .gnav-tab {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-family: 'DM Sans', 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    .gnav-tab:hover  { background: rgba(255,255,255,0.28); color: #fff; }
+    .gnav-tab.active { background: #fff; color: #CC0000; font-weight: 700; }
+
+    /* Each view fills the space below the nav */
+    .global-view {
+      display: none;
+      position: fixed;
+      top: 48px; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+    }
+    .global-view.active { display: block; }
+
+    /* Make sure each view's inner .app fills 100% height */
+    .global-view > .app,
+    .global-view > body > .app {
+      height: 100%;
+    }
+
+    /* ══════════════════════════════════════════
+       VIEW 1 & 3: MARKETFLOW ANALYTICS (shared CSS)
+    ══════════════════════════════════════════ */
+    #view-analytics, #view-waste-mgmt {
+      --red: #CC0000;
+      --red-light: #F5E6E6;
+      --red-dark: #990000;
+      --sidebar-w: 190px;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+      --bg-primary: #ffffff;
+      --bg-secondary: #F7F6F4;
+      --bg-tertiary: #EFEDE9;
+      --text-primary: #1A1A1A;
+      --text-secondary: #5F5E5A;
+      --text-tertiary: #9A9894;
+      --border-light: rgba(0,0,0,0.08);
+      --border-med: rgba(0,0,0,0.13);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #view-analytics, #view-waste-mgmt {
+        --bg-primary: #1E1E1C;
+        --bg-secondary: #252523;
+        --bg-tertiary: #161614;
+        --text-primary: #F0EEE8;
+        --text-secondary: #A8A69E;
+        --text-tertiary: #6A6864;
+        --border-light: rgba(255,255,255,0.08);
+        --border-med: rgba(255,255,255,0.14);
+        --red-light: #2A1010;
+      }
+    }
+
+    /* Scoped to view-analytics and view-compliance */
+    #view-analytics .app,
+    #view-compliance .app {
+      display: flex;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font, 'DM Sans', sans-serif);
+      background: var(--bg-tertiary, #EFEDE9);
+      color: var(--text-primary, #1A1A1A);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    #view-analytics .sidebar,
+    #view-compliance .sidebar {
+      width: 190px;
+      background: var(--bg-primary, #fff);
+      border-right: 0.5px solid var(--border-light, rgba(0,0,0,0.08));
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    #view-analytics .sidebar-brand,
+    #view-compliance .sidebar-brand {
+      padding: 18px 16px 12px;
+      border-bottom: 0.5px solid var(--border-light, rgba(0,0,0,0.08));
+    }
+    #view-analytics .jj-logo,
+    #view-compliance .jj-logo {
+      font-size: 18px; font-weight: 700; color: #CC0000;
+      font-family: 'DM Mono', monospace; letter-spacing: -0.5px;
+    }
+    #view-analytics .brand-title,
+    #view-compliance .brand-title {
+      font-size: 11px; font-weight: 600; color: #CC0000;
+      letter-spacing: 0.4px; line-height: 1.4; margin-top: 2px;
+    }
+    #view-analytics .brand-sub,
+    #view-compliance .brand-sub { font-size: 9px; color: var(--text-tertiary); margin-top: 2px; }
+    #view-analytics .nav-items,
+    #view-compliance .nav-items { flex: 1; padding: 8px 0; overflow-y: auto; }
+    #view-analytics .nav-item,
+    #view-compliance .nav-item {
+      display: block; padding: 9px 16px; font-size: 12px; font-weight: 400;
+      color: var(--text-secondary); cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background 0.12s, color 0.12s; user-select: none;
+    }
+    #view-analytics .nav-item:hover,
+    #view-compliance .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    #view-analytics .nav-item.active,
+    #view-compliance .nav-item.active {
+      color: #CC0000; border-left-color: #CC0000;
+      background: var(--red-light); font-weight: 500;
+    }
+    #view-analytics .sidebar-bottom,
+    #view-compliance .sidebar-bottom {
+      padding: 12px 14px 14px;
+      border-top: 0.5px solid var(--border-light);
+    }
+    #view-analytics .logout-btn,
+    #view-compliance .logout-btn {
+      width: 100%; padding: 7px 10px; font-size: 12px;
+      font-family: var(--font); background: transparent;
+      border: 0.5px solid var(--border-med); border-radius: 8px;
+      cursor: pointer; color: var(--text-secondary); margin-bottom: 10px;
+      transition: background 0.12s;
+    }
+    #view-analytics .logout-btn:hover,
+    #view-compliance .logout-btn:hover { background: var(--bg-secondary); }
+    #view-analytics .filter-btn,
+    #view-compliance .filter-btn {
+      width: 100%; padding: 8px 10px; font-size: 12px; font-family: var(--font);
+      background: #CC0000; border: none; border-radius: 8px;
+      cursor: pointer; color: #fff; font-weight: 500; margin-bottom: 8px;
+    }
+    #view-analytics .filter-label,
+    #view-compliance .filter-label {
+      font-size: 10px; color: #CC0000; font-weight: 600;
+      margin-bottom: 3px; margin-top: 8px;
+    }
+    #view-analytics .filter-select,
+    #view-compliance .filter-select {
+      width: 100%; padding: 5px 7px; font-size: 11px; font-family: var(--font);
+      background: var(--bg-secondary); border: 0.5px solid var(--border-light);
+      border-radius: 8px; color: var(--text-primary);
+    }
+    #view-analytics .apply-btn,
+    #view-compliance .apply-btn {
+      width: 100%; padding: 6px 10px; font-size: 11px; font-family: var(--font);
+      background: transparent; border: 0.5px solid var(--border-med);
+      border-radius: 8px; cursor: pointer; color: var(--text-secondary);
+      margin-top: 8px; transition: background 0.12s;
+    }
+    #view-analytics .main,
+    #view-compliance .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
+    #view-analytics .topbar,
+    #view-compliance .topbar {
+      padding: 12px 22px; border-bottom: 0.5px solid var(--border-light);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-primary); position: sticky; top: 0; z-index: 20;
+      gap: 12px; flex-wrap: wrap;
+    }
+    #view-analytics .topbar-left,
+    #view-compliance .topbar-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    #view-analytics .page-title,
+    #view-compliance .page-title { font-size: 18px; font-weight: 600; color: #CC0000; }
+    #view-analytics .role-tabs,
+    #view-compliance .role-tabs {
+      display: flex; border: 0.5px solid var(--border-med);
+      border-radius: 8px; overflow: hidden;
+    }
+    #view-analytics .role-tab,
+    #view-compliance .role-tab {
+      padding: 6px 14px; font-size: 11px; font-family: var(--font);
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-secondary); font-weight: 400;
+      transition: background 0.12s, color 0.12s;
+    }
+    #view-analytics .role-tab:not(:last-child),
+    #view-compliance .role-tab:not(:last-child) { border-right: 0.5px solid var(--border-light); }
+    #view-analytics .role-tab.active,
+    #view-compliance .role-tab.active { background: #CC0000; color: #fff; font-weight: 500; }
+    #view-analytics .user-badge,
+    #view-compliance .user-badge {
+      display: flex; align-items: center; gap: 8px; padding: 5px 12px;
+      border: 0.5px solid var(--border-light); border-radius: 20px;
+      font-size: 11px; color: var(--text-secondary); white-space: nowrap;
+    }
+    #view-analytics .avatar,
+    #view-compliance .avatar {
+      width: 26px; height: 26px; border-radius: 50%; background: #E6F1FB;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 600; color: #185FA5; flex-shrink: 0;
+    }
+    #view-analytics .content,
+    #view-compliance .content { padding: 20px 22px; flex: 1; }
+    #view-analytics .section-label,
+    #view-compliance .section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.9px;
+      color: var(--text-secondary); text-transform: uppercase;
+      margin-bottom: 10px; padding-bottom: 6px;
+      border-bottom: 0.5px solid var(--border-light);
+    }
+    #view-analytics .kpi-grid,
+    #view-compliance .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px; margin-bottom: 20px;
+    }
+    #view-analytics .kpi-card,
+    #view-compliance .kpi-card {
+      background: var(--bg-secondary); border-radius: 8px; padding: 12px 14px;
+    }
+    #view-analytics .kpi-label,
+    #view-compliance .kpi-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 5px; font-weight: 500; }
+    #view-analytics .kpi-value,
+    #view-compliance .kpi-value {
+      font-size: 20px; font-weight: 600; color: var(--text-primary);
+      font-family: 'DM Mono', monospace; letter-spacing: -0.5px;
+    }
+    #view-analytics .kpi-value.red,
+    #view-compliance .kpi-value.red { color: #CC0000; }
+    #view-analytics .chart-row,
+    #view-compliance .chart-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;
+    }
+    #view-analytics .chart-card,
+    #view-compliance .chart-card {
+      background: var(--bg-primary); border: 0.5px solid var(--border-light);
+      border-radius: 12px; padding: 14px 16px;
+    }
+    #view-analytics .chart-title,
+    #view-compliance .chart-title {
+      font-size: 11px; font-weight: 600; color: var(--text-secondary);
+      margin-bottom: 12px; letter-spacing: 0.2px;
+    }
+    #view-analytics .chart-wrap,
+    #view-compliance .chart-wrap { position: relative; width: 100%; height: 180px; }
+    #view-analytics .table-section,
+    #view-compliance .table-section {
+      background: var(--bg-primary); border: 0.5px solid var(--border-light);
+      border-radius: 12px; overflow: hidden; margin-bottom: 18px;
+    }
+    #view-analytics table,
+    #view-compliance table { width: 100%; border-collapse: collapse; }
+    #view-analytics thead,
+    #view-compliance thead { background: #CC0000; }
+    #view-analytics thead th,
+    #view-compliance thead th {
+      color: #fff; font-size: 11px; font-weight: 600; padding: 9px 12px;
+      text-align: left; letter-spacing: 0.3px; white-space: nowrap;
+    }
+    #view-analytics tbody tr,
+    #view-compliance tbody tr { border-bottom: 0.5px solid var(--border-light); }
+    #view-analytics tbody tr:last-child,
+    #view-compliance tbody tr:last-child { border: none; }
+    #view-analytics tbody tr:hover,
+    #view-compliance tbody tr:hover { background: var(--bg-secondary); }
+    #view-analytics tbody tr.flagged,
+    #view-compliance tbody tr.flagged { background: #FCEBEB; }
+    #view-analytics tbody td,
+    #view-compliance tbody td { padding: 8px 12px; font-size: 12px; color: var(--text-primary); }
+    #view-analytics .td-mono,
+    #view-compliance .td-mono { font-family: 'DM Mono', monospace; }
+    #view-analytics .td-red,
+    #view-compliance .td-red { color: #CC0000; font-weight: 600; }
+    #view-analytics .flag-badge,
+    #view-compliance .flag-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #F7C1C1; color: #A32D2D; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px; letter-spacing: 0.3px;
+    }
+    #view-analytics .badge-ok,
+    #view-compliance .badge-ok { background: #EAF3DE; color: #3B6D11; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
+    #view-analytics .badge-warn,
+    #view-compliance .badge-warn { background: #FAEEDA; color: #854F0B; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
+    #view-analytics .accuracy-badge,
+    #view-compliance .accuracy-badge { background: #EAF3DE; color: #3B6D11; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+    #view-analytics .footer-actions,
+    #view-compliance .footer-actions {
+      display: flex; justify-content: space-between; padding: 10px 0 4px; gap: 10px; flex-wrap: wrap;
+    }
+    #view-analytics .dl-btn,
+    #view-compliance .dl-btn {
+      padding: 8px 16px; font-size: 12px; font-family: var(--font);
+      background: transparent; border: 0.5px solid var(--border-med);
+      border-radius: 8px; cursor: pointer; color: var(--text-secondary);
+      transition: background 0.12s;
+    }
+    #view-analytics .dl-btn:hover,
+    #view-compliance .dl-btn:hover { background: var(--bg-secondary); }
+    #view-analytics .forecast-metric,
+    #view-compliance .forecast-metric {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-bottom: 0.5px solid var(--border-light);
+    }
+    #view-analytics .forecast-metric:last-child,
+    #view-compliance .forecast-metric:last-child { border: none; }
+    #view-analytics .forecast-bar-bg,
+    #view-compliance .forecast-bar-bg {
+      height: 6px; background: var(--bg-secondary); border-radius: 3px;
+      width: 110px; overflow: hidden;
+    }
+    #view-analytics .forecast-bar,
+    #view-compliance .forecast-bar { height: 6px; background: #CC0000; border-radius: 3px; }
+    #view-analytics .access-denied,
+    #view-compliance .access-denied {
+      background: #FCEBEB; border: 0.5px solid #F7C1C1; border-radius: 8px;
+      padding: 14px 18px; color: #A32D2D; font-size: 13px;
+      display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px;
+    }
+    #view-analytics .lock-icon,
+    #view-compliance .lock-icon {
+      width: 22px; height: 22px; background: #F7C1C1; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0; margin-top: 1px;
+    }
+    #view-analytics .access-denied-title,
+    #view-compliance .access-denied-title { font-weight: 600; margin-bottom: 3px; }
+    #view-analytics .access-denied-msg,
+    #view-compliance .access-denied-msg { font-size: 12px; color: #993556; }
+    #view-analytics .audit-log,
+    #view-compliance .audit-log {
+      background: var(--bg-primary); border: 0.5px solid var(--border-light);
+      border-radius: 12px; padding: 4px 16px 4px; margin-bottom: 20px;
+    }
+    #view-analytics .audit-row,
+    #view-compliance .audit-row {
+      display: flex; gap: 10px; align-items: flex-start; padding: 9px 0;
+      border-bottom: 0.5px solid var(--border-light); font-size: 12px;
+    }
+    #view-analytics .audit-row:last-child,
+    #view-compliance .audit-row:last-child { border: none; }
+    #view-analytics .audit-time,
+    #view-compliance .audit-time {
+      color: var(--text-tertiary); font-family: 'DM Mono', monospace;
+      font-size: 11px; min-width: 72px; flex-shrink: 0; padding-top: 1px;
+    }
+    #view-analytics .audit-action,
+    #view-compliance .audit-action { color: var(--text-primary); flex: 1; }
+    #view-analytics .audit-user,
+    #view-compliance .audit-user { color: #CC0000; font-weight: 500; }
+    #view-analytics .chart-legend,
+    #view-compliance .chart-legend {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;
+      font-size: 11px; color: var(--text-secondary);
+    }
+    #view-analytics .legend-item,
+    #view-compliance .legend-item { display: flex; align-items: center; gap: 5px; }
+    #view-analytics .legend-swatch,
+    #view-compliance .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    /* ══════════════════════════════════════════
+       VIEW 2: WASTE MANAGEMENT (dark)
+    ══════════════════════════════════════════ */
+    #view-waste {
+      --red: #CC0000;
+      --red-light: #2A1010;
+      --red-dark: #990000;
+      --sidebar-w: 190px;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+      --bg-primary: #1E1E1C;
+      --bg-secondary: #252523;
+      --bg-tertiary: #141412;
+      --text-primary: #F0EEE8;
+      --text-secondary: #A8A69E;
+      --text-tertiary: #6A6864;
+      --border-light: rgba(255,255,255,0.08);
+      --border-med: rgba(255,255,255,0.14);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+    #view-waste body-inner,
+    #view-waste .waste-body {
+      font-family: var(--font);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      display: flex;
+      height: 100%;
+      overflow: hidden;
+    }
+    #view-waste .sidebar {
+      width: 190px; background: var(--bg-primary);
+      border-right: 1px solid var(--border-light);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    #view-waste .sidebar-brand { padding: 24px 16px; border-bottom: 1px solid var(--border-light); }
+    #view-waste .brand-title { font-size: 17px; font-weight: 600; color: #CC0000; letter-spacing: 0.5px; text-transform: uppercase; }
+    #view-waste .nav-items { flex: 1; padding: 10px 0; }
+    #view-waste .nav-item {
+      padding: 12px 16px; color: var(--text-secondary); cursor: pointer;
+      font-size: 13px; transition: 0.2s;
+    }
+    #view-waste .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    #view-waste .nav-item.active {
+      color: var(--text-primary); font-weight: 600;
+      background: var(--red-light); border-left: 3px solid #CC0000;
+    }
+    #view-waste .logoutButton {
+      width: 100%; padding: 7px 10px; font-size: 12px; font-family: var(--font);
+      background: transparent; border: 0.5px solid var(--border-med);
+      border-radius: 8px; cursor: pointer; color: var(--text-secondary);
+      margin-bottom: 10px; transition: background 0.12s;
+    }
+    #view-waste .logoutButton:hover { background: var(--bg-secondary); }
+    #view-waste .filterButton {
+      width: 100%; padding: 8px 10px; font-size: 12px; font-family: var(--font);
+      background: #CC0000; border: none; border-radius: 8px;
+      cursor: pointer; color: #fff; font-weight: 500; margin-bottom: 8px;
+    }
+    #view-waste .filter-label { font-size: 10px; color: #CC0000; font-weight: 600; margin-bottom: 3px; margin-top: 8px; }
+    #view-waste .filter-select {
+      width: 100%; padding: 5px 7px; font-size: 11px; font-family: var(--font);
+      background: var(--bg-secondary); border: 0.5px solid var(--border-light);
+      border-radius: 8px; color: var(--text-primary);
+    }
+    #view-waste .applyButton {
+      width: 100%; padding: 6px 10px; font-size: 11px; font-family: var(--font);
+      background: transparent; border: 0.5px solid var(--border-med);
+      border-radius: 8px; cursor: pointer; color: var(--text-secondary);
+      margin-top: 8px; transition: background 0.12s;
+    }
+    #view-waste .applyButton:hover { background: var(--bg-secondary); }
+    #view-waste .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    #view-waste .topbar {
+      padding: 12px 22px; border-bottom: 0.5px solid var(--border-light);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-primary); position: sticky; top: 0; z-index: 20;
+      gap: 12px; flex-wrap: wrap;
+    }
+    #view-waste .topbar-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    #view-waste .page-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+    #view-waste .role-tabs {
+      display: flex; border: 0.5px solid var(--border-med);
+      border-radius: 8px; overflow: hidden;
+    }
+    #view-waste .role-tab {
+      padding: 6px 14px; font-size: 11px; font-family: var(--font);
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-secondary); transition: background 0.12s, color 0.12s;
+    }
+    #view-waste .role-tab:not(:last-child) { border-right: 0.5px solid var(--border-light); }
+    #view-waste .role-tab.active { background: #CC0000; color: #fff; font-weight: 500; }
+    #view-waste .user-badge {
+      display: flex; align-items: center; gap: 8px; padding: 5px 12px;
+      border: 0.5px solid var(--border-light); border-radius: 20px; font-size: 11px;
+    }
+    #view-waste .avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--red-light); display: flex; align-items: center;
+      justify-content: center; font-size: 10px; font-weight: 600; color: #CC0000;
+    }
+    #view-waste .filter-section {
+      display: flex; gap: 32px; background: var(--bg-primary);
+      padding: 16px 24px; border-bottom: 1px solid var(--border-light);
+    }
+    #view-waste .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    #view-waste .filter-group label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; }
+    #view-waste select {
+      padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-med);
+      background: var(--bg-secondary); font-family: var(--font); font-size: 12px;
+      color: var(--text-primary); outline: none;
+    }
+    #view-waste .content-grid {
+      display: grid; grid-template-columns: 2fr 1fr;
+      gap: 20px; padding: 24px;
+    }
+    #view-waste #waste-mainContent { display: none; width: 100%; padding: 24px; }
+    #view-waste .customer-top-panel {
+      display: grid; grid-template-columns: 1.1fr 0.95fr;
+      gap: 20px; padding: 24px;
+    }
+    #view-waste .customer-left-column,
+    #view-waste .customer-right-column { display: flex; flex-direction: column; gap: 16px; }
+    #view-waste .info-card {
+      background: var(--bg-primary); border: 1px solid var(--border-light);
+      border-radius: 12px; padding: 18px; min-height: 88px;
+    }
+    #view-waste .customer-product-image,
+    #view-waste .hazard-label-image {
+      width: 100%; height: 300px; min-height: unset;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #view-waste .customer-product-image img,
+    #view-waste .hazard-label-image img {
+      width: 100%; height: 100%; object-fit: contain; border-radius: 8px;
+    }
+    #view-waste .card-title {
+      font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+    }
+    #view-waste .card-value { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+    #view-waste .card-content { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    #view-waste .reportButton-container { margin-top: auto; display: flex; justify-content: flex-end; }
+    #view-waste .reportButton {
+      background: #CC0000; border: none; border-radius: 8px;
+      color: #fff; padding: 10px 18px; font-size: 13px; cursor: pointer;
+    }
+    #view-waste .chart-card {
+      background: var(--bg-primary); padding: 24px; border-radius: 12px;
+      border: 1px solid var(--border-light); height: 360px;
+      display: flex; flex-direction: column;
+    }
+    #view-waste .chart-header { font-size: 12px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 16px; }
+    #view-waste .chart-container { flex: 1; position: relative; width: 100%; }
+    #view-waste .stats-column { display: flex; flex-direction: column; gap: 16px; }
+    #view-waste .stat-box {
+      background: var(--bg-primary); padding: 20px; border-radius: 12px;
+      border: 1px solid var(--border-light);
+    }
+    #view-waste .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+    #view-waste .stat-value {
+      font-size: 22px; font-weight: 600; color: #CC0000;
+      margin-top: 4px; font-family: 'DM Mono', monospace;
+    }
+    #view-waste .modal {
+      display: none; position: fixed; z-index: 100000; left: 0; top: 0;
+      width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
+    }
+    #view-waste .modal-content {
+      background-color: var(--bg-primary); margin: 15% auto; padding: 20px;
+      border: 1px solid var(--border-light); border-radius: 12px;
+      width: 300px; text-align: center; color: var(--text-primary);
+    }
+    #view-waste .modal-content p { margin-bottom: 20px; font-size: 18px; }
+    #view-waste .modal-content button {
+      margin: 0 10px; padding: 10px 20px; border: none; border-radius: 8px;
+      cursor: pointer; font-family: var(--font); font-size: 14px;
+    }
+    #view-waste #waste-confirmLogout { background-color: #CC0000; color: #fff; }
+    #view-waste #waste-cancelLogout { background-color: var(--bg-secondary); color: var(--text-primary); }
+    /* Researcher table in waste view */
+    #view-waste table { width: 100%; border-collapse: separate; border-spacing: 0; color: var(--text-primary); }
+    #view-waste table th {
+      padding: 12px; border-bottom: 1px solid var(--border-light);
+      text-align: center; color: var(--text-secondary); font-size: 11px;
+    }
+    #view-waste table td {
+      padding: 12px; border-bottom: 1px solid var(--border-light);
+      text-align: center; font-size: 12px; color: var(--text-primary);
+    }
+
+    /* ══════════════════════════════════════════
+       VIEW 3: ADMIN (dark)
+    ══════════════════════════════════════════ */
+    #view-admin {
+      --red: #CC0000; --red-bright: #FF2222; --red-dim: #6B0000;
+      --bg: #1a1a1a; --bg2: #212121; --bg3: #2a2a2a; --bg4: #333;
+      --text: #f0f0f0; --text2: #999; --text3: #555;
+      --border: rgba(255,255,255,0.08);
+      --font: 'Inter', sans-serif; --radius: 8px; --radius-lg: 12px;
+    }
+    #view-admin .admin-wrap {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      font-size: 13px; line-height: 1.5; height: 100%; overflow: hidden;
+      display: flex;
+    }
+    #view-admin .sidebar { width: 205px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    #view-admin .sb-brand { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+    #view-admin .jj-sub { font-size: 9px; font-weight: 600; color: #CC0000; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 10px; opacity: 0.75; }
+    #view-admin .nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+    #view-admin .nav-item { padding: 9px 18px; font-size: 12px; color: var(--text2); cursor: pointer; transition: background 0.12s; }
+    #view-admin .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    #view-admin .nav-item.active { background: var(--red-dim); color: var(--text); font-weight: 600; border-left: 3px solid #CC0000; padding-left: 15px; }
+    #view-admin .sb-bottom { padding: 14px 16px; border-top: 1px solid var(--border); }
+    #view-admin .av { width: 30px; height: 30px; border-radius: 50%; background: var(--red-dim); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #FF2222; flex-shrink: 0; }
+    #view-admin .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    #view-admin .topbar { padding: 15px 26px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    #view-admin .page-title { font-size: 19px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
+    #view-admin .role-pill { background: var(--red-dim); color: #FF2222; font-size: 10px; font-weight: 600; padding: 3px 11px; border-radius: 20px; letter-spacing: 0.4px; }
+    #view-admin .role-pill-solid { background: #CC0000; color: #fff; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+    #view-admin .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    #view-admin .page.active { display: flex; }
+    #view-admin .content { flex: 1; overflow-y: auto; padding: 20px 26px; }
+    #view-admin .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    #view-admin .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+    #view-admin .stat-label { font-size: 10px; color: var(--text2); letter-spacing: 0.7px; text-transform: uppercase; font-weight: 500; margin-bottom: 8px; }
+    #view-admin .stat-val { font-size: 30px; font-weight: 700; color: #FF2222; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+    #view-admin .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    #view-admin .col { display: flex; flex-direction: column; gap: 14px; }
+    #view-admin .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+    #view-admin .card-title { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    #view-admin .role-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); }
+    #view-admin .role-row:last-of-type { border-bottom: none; }
+    #view-admin .perm { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    #view-admin .p-high { background: rgba(204,0,0,0.18); color: #FF6666; }
+    #view-admin .p-med  { background: rgba(200,140,0,0.18); color: #FFB700; }
+    #view-admin .p-view { background: rgba(90,90,90,0.25); color: #aaa; }
+    #view-admin .edit-link { font-size: 10px; color: #CC0000; cursor: pointer; }
+    #view-admin .edit-link:hover { color: #FF2222; }
+    #view-admin .alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    #view-admin .alert-row:last-child { border-bottom: none; padding-bottom: 0; }
+    #view-admin .adot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+    #view-admin .d-red { background: #FF2222; } #view-admin .d-amb { background: #FFB700; } #view-admin .d-blu { background: #4499FF; }
+    #view-admin .alert-title { font-size: 12px; font-weight: 600; color: var(--text); }
+    #view-admin .alert-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+    #view-admin .alert-cnt { margin-left: auto; font-weight: 700; color: #FF2222; font-size: 15px; }
+    #view-admin .ap-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); overflow: hidden; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease, max-height 0.3s ease 0.25s, padding 0.3s ease 0.25s; max-height: 60px; }
+    #view-admin .ap-row:last-of-type { border-bottom: none; }
+    #view-admin .ap-row.dismissing { transform: translateX(-115%); opacity: 0; }
+    #view-admin .ap-row.dismissed { max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom: none; }
+    #view-admin .ap-empty { font-size: 11px; color: var(--text3); text-align: center; padding: 14px 0; display: none; }
+    #view-admin .ap-btns { margin-left: auto; display: flex; gap: 6px; }
+    #view-admin .ap-btn { border: none; border-radius: 4px; padding: 3px 10px; font-size: 10px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+    #view-admin .ap-ok { background: rgba(0,160,0,0.18); color: #55DD55; } #view-admin .ap-ok:hover { background: rgba(0,160,0,0.3); }
+    #view-admin .ap-no { background: rgba(204,0,0,0.18); color: #FF6666; } #view-admin .ap-no:hover { background: rgba(204,0,0,0.3); }
+    #view-admin .qbtn { width: 100%; background: rgba(204,0,0,0.1); color: #FF2222; border: 1px solid rgba(204,0,0,0.22); border-radius: var(--radius); padding: 9px 14px; font-size: 11px; font-weight: 500; cursor: pointer; text-align: left; font-family: var(--font); transition: background 0.12s; margin-bottom: 8px; }
+    #view-admin .qbtn:last-child { margin-bottom: 0; } #view-admin .qbtn:hover { background: rgba(204,0,0,0.2); }
+    #view-admin .assign-btn { width: 100%; background: #CC0000; color: #fff; border: none; border-radius: var(--radius); padding: 9px 14px; font-size: 11px; font-weight: 600; cursor: pointer; margin-top: 12px; font-family: var(--font); transition: background 0.12s; }
+    #view-admin .assign-btn:hover { background: #aa0000; }
+    #view-admin .inv-content { flex: 1; overflow-y: auto; padding: 20px 26px; }
+    #view-admin .toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+    #view-admin .search { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 14px; font-size: 12px; color: var(--text); outline: none; font-family: var(--font); }
+    #view-admin .search::placeholder { color: var(--text3); }
+    #view-admin .add-btn { background: #CC0000; border: none; border-radius: var(--radius); padding: 9px 16px; font-size: 11px; font-weight: 600; color: #fff; cursor: pointer; font-family: var(--font); white-space: nowrap; }
+    #view-admin .add-btn:hover { background: #aa0000; }
+    #view-admin .dropdown { position: relative; }
+    #view-admin .dd-toggle { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 13px; font-size: 11px; font-weight: 500; color: var(--text2); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 7px; font-family: var(--font); user-select: none; }
+    #view-admin .dd-toggle.filtered { border-color: #CC0000; color: #FF2222; }
+    #view-admin .dd-arrow { font-size: 8px; transition: transform 0.15s; }
+    #view-admin .dropdown.open .dd-arrow { transform: rotate(180deg); }
+    #view-admin .dd-menu { display: none; position: absolute; top: calc(100% + 5px); left: 0; background: var(--bg3); border: 1px solid rgba(255,255,255,0.13); border-radius: var(--radius); padding: 5px 0; min-width: 185px; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.55); }
+    #view-admin .dropdown.open .dd-menu { display: block; }
+    #view-admin .dd-item { padding: 8px 14px; font-size: 12px; color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 9px; }
+    #view-admin .dd-item:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    #view-admin .dd-item.sel { color: #FF2222; font-weight: 600; }
+    #view-admin .dd-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    #view-admin .dd-sep { height: 1px; background: var(--border); margin: 4px 0; }
+    #view-admin .pills { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+    #view-admin .pill { background: rgba(204,0,0,0.14); border: 1px solid rgba(204,0,0,0.3); color: #FF2222; border-radius: 20px; padding: 3px 11px; font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    #view-admin .pill-x { cursor: pointer; opacity: 0.65; font-size: 14px; line-height: 1; }
+    #view-admin .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    #view-admin .ccard { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; display: flex; flex-direction: column; transition: border-color 0.15s, opacity 0.4s ease, transform 0.4s ease; }
+    #view-admin .ccard.dissolving { opacity: 0; transform: scale(0.95); pointer-events: none; }
+    #view-admin .ccard.b-danger { border-color: rgba(204,0,0,0.28); }
+    #view-admin .ccard.b-high { border-color: rgba(204,0,0,0.18); }
+    #view-admin .ccard-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+    #view-admin .cname { font-size: 13px; font-weight: 600; letter-spacing: -0.15px; color: var(--text); }
+    #view-admin .ccat { font-size: 10px; color: var(--text3); margin-top: 3px; }
+    #view-admin .rbadge { padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+    #view-admin .r-low  { background: rgba(0,160,0,0.16); color: #55DD55; }
+    #view-admin .r-mod  { background: rgba(200,140,0,0.18); color: #FFB700; }
+    #view-admin .r-high { background: rgba(204,0,0,0.18); color: #FF6666; }
+    #view-admin .r-res  { background: rgba(130,0,210,0.18); color: #CC88FF; }
+    #view-admin .desc { font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 12px; flex: 1; }
+    #view-admin .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    #view-admin .tag { background: var(--bg4); color: var(--text3); font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+    #view-admin .actions { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 12px; }
+    #view-admin .abt { flex: 1; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); border-radius: 6px; padding: 6px; font-size: 11px; font-weight: 500; cursor: pointer; text-align: center; font-family: var(--font); }
+    #view-admin .abt:hover { background: var(--bg4); color: var(--text); }
+    #view-admin .abt-del { background: rgba(204,0,0,0.1); color: #FF6666; border-color: rgba(204,0,0,0.2); }
+    #view-admin .abt-del:hover { background: rgba(204,0,0,0.2); }
+    #view-admin .abt-pend { background: rgba(130,0,210,0.1); color: #CC88FF; border-color: rgba(130,0,210,0.2); }
+    #view-admin .no-results { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text3); font-size: 14px; }
+    #view-admin .um-content { flex: 1; overflow-y: auto; padding: 20px 26px; }
+    #view-admin .um-tab { background: transparent; border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; font-family: var(--font); }
+    #view-admin .um-tab.active { background: var(--red-dim); color: var(--text); font-weight: 600; }
+    #view-admin .um-toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+    #view-admin .um-search { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 14px; font-size: 12px; color: var(--text); outline: none; font-family: var(--font); }
+    #view-admin .um-search::placeholder { color: var(--text3); }
+    #view-admin .um-add-btn { background: #CC0000; border: none; border-radius: var(--radius); padding: 9px 16px; font-size: 11px; font-weight: 600; color: #fff; cursor: pointer; font-family: var(--font); white-space: nowrap; }
+    #view-admin .um-add-btn:hover { background: #aa0000; }
+    #view-admin .role-block { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; }
+    #view-admin .role-block-hdr { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; cursor: pointer; }
+    #view-admin .role-block-hdr:hover { background: rgba(255,255,255,0.03); }
+    #view-admin .rb-arrow { font-size: 10px; color: var(--text3); transition: transform 0.2s; }
+    #view-admin .role-block.open .rb-arrow { transform: rotate(180deg); }
+    #view-admin .role-block-body { padding: 0 18px 16px; border-top: 1px solid var(--border); }
+    #view-admin .perm-section-title { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.9px; text-transform: uppercase; padding: 12px 0 10px; }
+    #view-admin .perm-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); }
+    #view-admin .perm-row:last-child { border-bottom: none; }
+    #view-admin .toggle { width: 36px; height: 20px; border-radius: 20px; cursor: pointer; position: relative; flex-shrink: 0; transition: background 0.2s; }
+    #view-admin .toggle.on  { background: #CC0000; }
+    #view-admin .toggle.off { background: var(--bg4); }
+    #view-admin .toggle::after { content:''; position:absolute; width:14px; height:14px; border-radius:50%; background:#fff; top:3px; transition: left 0.2s; }
+    #view-admin .toggle.on::after  { left: 19px; }
+    #view-admin .toggle.off::after { left: 3px; }
+    #view-admin .um-table { width: 100%; border-collapse: collapse; }
+    #view-admin .um-table thead tr { border-bottom: 1px solid var(--border); }
+    #view-admin .um-table th { text-align: left; font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.8px; text-transform: uppercase; padding: 0 14px 10px; }
+    #view-admin .um-table tbody tr { border-bottom: 1px solid var(--border); }
+    #view-admin .um-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    #view-admin .um-table tbody tr:last-child { border-bottom: none; }
+    #view-admin .um-table td { padding: 11px 14px; font-size: 12px; vertical-align: middle; color: var(--text); }
+    #view-admin .um-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--red-dim); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #FF2222; margin-right: 10px; flex-shrink: 0; }
+    #view-admin .um-name-cell { display: flex; align-items: center; }
+    #view-admin .um-name { font-weight: 500; color: var(--text); }
+    #view-admin .um-email { font-size: 10px; color: var(--text3); margin-top: 2px; }
+    #view-admin .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    #view-admin .s-active { background: #55DD55; } #view-admin .s-inactive { background: var(--text3); } #view-admin .s-pending { background: #FFB700; }
+    #view-admin .um-role-badge { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    #view-admin .ur-admin { background: rgba(204,0,0,0.18); color: #FF6666; }
+    #view-admin .ur-lab   { background: rgba(68,153,255,0.15); color: #66AAFF; }
+    #view-admin .ur-user  { background: rgba(90,90,90,0.25); color: #aaa; }
+    #view-admin .ur-mktg  { background: rgba(130,0,210,0.18); color: #CC88FF; }
+    #view-admin .ur-comp  { background: rgba(200,140,0,0.18); color: #FFB700; }
+    #view-admin .um-action-btn { border: none; border-radius: 5px; padding: 4px 10px; font-size: 10px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+    #view-admin .um-remove { background: rgba(204,0,0,0.12); color: #FF6666; }
+    #view-admin .um-remove:hover { background: rgba(204,0,0,0.25); }
+    #view-admin .um-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:100001; align-items:center; justify-content:center; }
+    #view-admin .um-modal { background:#222; border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:28px 32px; width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+    #view-admin .um-modal h3 { font-size:15px; font-weight:600; margin-bottom:20px; color: var(--text); }
+    #view-admin .um-field { margin-bottom:14px; }
+    #view-admin .um-field label { display:block; font-size:10px; font-weight:600; color:var(--text3); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:6px; }
+    #view-admin .um-field input, #view-admin .um-field select { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:9px 12px; font-size:12px; color:var(--text); font-family:var(--font); outline:none; }
+    #view-admin .um-modal-btns { display:flex; gap:10px; margin-top:22px; }
+    #view-admin .um-modal-cancel { flex:1; background:var(--bg3); border:1px solid var(--border); color:var(--text2); border-radius:var(--radius); padding:9px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); }
+    #view-admin .um-modal-save { flex:1; background:#CC0000; border:none; color:#fff; border-radius:var(--radius); padding:9px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); }
+    #view-admin .chat-area { flex: 1; overflow-y: auto; padding: 22px 26px; display: flex; flex-direction: column; gap: 18px; scroll-behavior: smooth; }
+    #view-admin .msg { display: flex; gap: 12px; align-items: flex-start; animation: adminFadeUp 0.25s ease; }
+    #view-admin .msg.user { flex-direction: row-reverse; }
+    @keyframes adminFadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    #view-admin .msg-av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    #view-admin .bot-av { background: var(--red-dim); color: #FF2222; }
+    #view-admin .usr-av { background: #1b2a40; color: #4499FF; }
+    #view-admin .bubble { max-width: 72%; padding: 13px 16px; font-size: 13px; line-height: 1.65; border-radius: 4px 14px 14px 14px; }
+    #view-admin .bot-b { background: var(--bg2); border: 1px solid var(--border); color: var(--text); }
+    #view-admin .usr-b { background: var(--red-dim); border: 1px solid rgba(204,0,0,0.35); color: #fff; border-radius: 14px 4px 14px 14px; }
+    #view-admin .tag-r { display: inline-flex; background: rgba(204,0,0,0.3); color: #FF8888; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    #view-admin .tag-g { display: inline-flex; background: rgba(0,160,0,0.2); color: #55DD55; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    #view-admin .typing-bubble { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px 14px 14px 14px; padding: 14px 18px; display: flex; gap: 5px; align-items: center; }
+    #view-admin .typing-bubble span { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); display: inline-block; animation: adminBounce 1.2s infinite; }
+    #view-admin .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+    #view-admin .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes adminBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); background: var(--text2); } }
+    #view-admin .chips { display: flex; gap: 8px; padding: 8px 26px 12px; flex-wrap: wrap; background: var(--bg); border-top: 1px solid var(--border); }
+    #view-admin .chip { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--text2); cursor: pointer; }
+    #view-admin .chip:hover { background: var(--bg4); color: var(--text); }
+    #view-admin .input-row { padding: 14px 26px; background: var(--bg); border-top: 1px solid var(--border); display: flex; gap: 10px; flex-shrink: 0; }
+    #view-admin .chat-in { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 16px; font-size: 13px; color: var(--text); outline: none; font-family: var(--font); }
+    #view-admin .chat-in::placeholder { color: var(--text3); }
+    #view-admin .send-btn { background: #CC0000; border: none; border-radius: var(--radius); padding: 11px 24px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; font-family: var(--font); }
+    #view-admin .send-btn:hover { background: #aa0000; }
+    #view-admin .send-btn:disabled { background: var(--bg4); color: var(--text3); cursor: not-allowed; }
+
+    /* ══════════════════════════════════════════
+       VIEW 4: RETAIL / SALES
+    ══════════════════════════════════════════ */
+    #view-retail {
+      --red: #CC0000; --red-hover: #B30000; --red-light: #FDF0F0; --red-mid: #F5E0E0;
+      --yellow: #F5C842; --yellow-light: #FFFBE6;
+      --sidebar-w: 200px;
+      --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+      --bg-primary: #ffffff; --bg-secondary: #F7F6F4; --bg-tertiary: #F0EDEA;
+      --text-primary: #1A1A1A; --text-secondary: #5F5E5A; --text-tertiary: #9A9894;
+      --border-light: rgba(0,0,0,0.07); --border-med: rgba(0,0,0,0.12);
+      --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      #view-retail {
+        --bg-primary: #1E1E1C; --bg-secondary: #252523; --bg-tertiary: #161614;
+        --text-primary: #F0EEE8; --text-secondary: #A8A69E; --text-tertiary: #6A6864;
+        --border-light: rgba(255,255,255,0.07); --border-med: rgba(255,255,255,0.13);
+        --red-light: #2A1010; --red-mid: #351515; --yellow-light: #2A2510;
+      }
+    }
+    #view-retail .retail-wrap {
+      font-family: var(--font); background: var(--bg-tertiary); color: var(--text-primary);
+      font-size: 13px; line-height: 1.5; display: flex; height: 100%; overflow: hidden;
+    }
+    /* All retail inner styles are prefixed with #view-retail to avoid leaking */
+    #view-retail .sidebar { width: var(--sidebar-w); background: var(--bg-primary); border-right: 0.5px solid var(--border-light); display: flex; flex-direction: column; flex-shrink: 0; z-index: 30; }
+    #view-retail .sidebar-brand { padding: 20px 16px 16px; border-bottom: 0.5px solid var(--border-light); }
+    #view-retail .jj-logo { font-size: 20px; font-weight: 700; color: var(--red); font-family: var(--mono); letter-spacing: -0.5px; }
+    #view-retail .brand-title { font-size: 11px; font-weight: 600; color: var(--red); letter-spacing: 0.5px; margin-top: 2px; text-transform: uppercase; }
+    #view-retail .brand-sub { font-size: 9px; color: var(--text-tertiary); margin-top: 3px; }
+    #view-retail .nav-section-label { font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-tertiary); padding: 14px 16px 6px; }
+    #view-retail .nav-items { flex: 1; padding: 8px 0; overflow-y: auto; }
+    #view-retail .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; color: var(--text-secondary); font-size: 12.5px; font-weight: 500; transition: all 0.15s ease; border-left: 2px solid transparent; text-decoration: none; }
+    #view-retail .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    #view-retail .nav-item.active { background: var(--red-light); color: var(--red); border-left-color: var(--red); font-weight: 600; }
+    #view-retail .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+    #view-retail .nav-item.active .nav-icon { opacity: 1; }
+    #view-retail .nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 9px; font-weight: 700; font-family: var(--mono); padding: 1px 5px; border-radius: 10px; min-width: 18px; text-align: center; }
+    #view-retail .sidebar-bottom { padding: 12px 14px 16px; border-top: 0.5px solid var(--border-light); }
+    #view-retail .user-pill { display: flex; align-items: center; gap: 9px; padding: 8px 10px; background: var(--bg-secondary); border-radius: var(--radius-md); cursor: pointer; }
+    #view-retail .user-avatar { width: 28px; height: 28px; background: var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; font-family: var(--mono); flex-shrink: 0; }
+    #view-retail .user-name { font-size: 11.5px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+    #view-retail .user-role { font-size: 9.5px; color: var(--text-tertiary); }
+    #view-retail .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
+    #view-retail .topbar { padding: 0 24px; height: 56px; border-bottom: 0.5px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; background: var(--bg-primary); position: sticky; top: 0; z-index: 20; gap: 16px; }
+    #view-retail .topbar-left { display: flex; align-items: center; gap: 16px; }
+    #view-retail .welcome-chip { display: flex; align-items: center; gap: 9px; background: var(--red); color: #fff; padding: 6px 14px 6px 10px; border-radius: var(--radius-md); font-size: 12.5px; font-weight: 600; }
+    #view-retail .welcome-chip-dot { width: 6px; height: 6px; background: rgba(255,255,255,0.5); border-radius: 50%; }
+    #view-retail .topbar-right { display: flex; align-items: center; gap: 10px; }
+    #view-retail .topbar-btn { display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: var(--radius-md); border: 0.5px solid var(--border-med); background: transparent; color: var(--text-secondary); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; }
+    #view-retail .topbar-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    #view-retail .topbar-btn.danger { background: #1A1A1A; color: #fff; border-color: #1A1A1A; font-weight: 600; }
+    #view-retail .notif-btn { width: 34px; height: 34px; border-radius: var(--radius-md); border: 0.5px solid var(--border-med); background: transparent; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; }
+    #view-retail .notif-dot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; background: var(--red); border-radius: 50%; border: 1.5px solid var(--bg-primary); }
+    #view-retail .content { padding: 24px; flex: 1; }
+    #view-retail .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
+    #view-retail .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+    #view-retail .page-subtitle { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+    #view-retail .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    #view-retail .stat-card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 14px 16px; }
+    #view-retail .stat-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
+    #view-retail .stat-value { font-size: 22px; font-weight: 700; font-family: var(--mono); color: var(--text-primary); letter-spacing: -0.5px; line-height: 1; }
+    #view-retail .stat-value.red { color: var(--red); }
+    #view-retail .stat-meta { font-size: 10px; color: var(--text-tertiary); margin-top: 4px; }
+    #view-retail .stat-meta .up { color: #16a34a; font-weight: 600; }
+    #view-retail .stat-meta .down { color: var(--red); font-weight: 600; }
+    #view-retail .panel { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; }
+    #view-retail .panel-header { padding: 14px 18px; border-bottom: 0.5px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    #view-retail .panel-title { font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    #view-retail .panel-title-badge { background: var(--bg-tertiary); color: var(--text-secondary); font-size: 10px; font-weight: 600; font-family: var(--mono); padding: 2px 7px; border-radius: 20px; }
+    #view-retail .filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    #view-retail .filter-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); margin-right: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    #view-retail .filter-chip { display: flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; border: 0.5px solid var(--border-med); background: transparent; font-family: var(--font); font-size: 11.5px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.15s ease; user-select: none; white-space: nowrap; }
+    #view-retail .filter-chip:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+    #view-retail .filter-chip.active { background: var(--red); color: #fff; border-color: var(--red); font-weight: 600; }
+    #view-retail .filter-chip.bestseller { border-color: var(--yellow); color: #8a6a00; background: var(--yellow-light); }
+    #view-retail .filter-chip.bestseller.active { background: var(--yellow); color: #5a4400; border-color: var(--yellow); }
+    #view-retail .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    #view-retail .search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 260px; }
+    #view-retail .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); pointer-events: none; }
+    #view-retail .search-input { width: 100%; padding: 7px 10px 7px 32px; border: 0.5px solid var(--border-med); border-radius: var(--radius-md); background: var(--bg-secondary); font-family: var(--font); font-size: 12px; color: var(--text-primary); outline: none; }
+    #view-retail .search-input::placeholder { color: var(--text-tertiary); }
+    #view-retail .search-input:focus { border-color: var(--red); }
+    #view-retail .filter-toolbar { padding: 12px 18px; border-bottom: 0.5px solid var(--border-light); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--bg-secondary); }
+    #view-retail .table-wrap { overflow-x: auto; }
+    #view-retail table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    #view-retail thead tr { background: var(--bg-secondary); border-bottom: 0.5px solid var(--border-med); }
+    #view-retail th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-tertiary); white-space: nowrap; }
+    #view-retail tbody tr { border-bottom: 0.5px solid var(--border-light); transition: background 0.1s ease; }
+    #view-retail tbody tr:last-child { border-bottom: none; }
+    #view-retail tbody tr:hover { background: var(--bg-secondary); }
+    #view-retail tbody tr.highlight { background: var(--yellow-light); }
+    #view-retail td { padding: 11px 14px; color: var(--text-primary); vertical-align: middle; }
+    #view-retail td.mono { font-family: var(--mono); font-size: 11.5px; color: var(--text-secondary); }
+    #view-retail td.muted { color: var(--text-secondary); }
+    #view-retail td.bold { font-weight: 600; }
+    #view-retail .product-name { font-weight: 600; color: var(--text-primary); }
+    #view-retail .product-name small { display: block; font-size: 10px; font-weight: 400; color: var(--text-tertiary); margin-top: 1px; }
+    #view-retail .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+    #view-retail .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+    #view-retail .badge-available { background: #ECFDF5; color: #065F46; }
+    #view-retail .badge-partial { background: #FFFBEB; color: #92400E; }
+    #view-retail .badge-backorder { background: #FEF2F2; color: #991B1B; }
+    #view-retail .hazard-yes { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: #B45309; }
+    #view-retail .hazard-no { font-size: 10.5px; color: var(--text-tertiary); }
+    #view-retail .qty-input { width: 62px; padding: 5px 8px; border: 0.5px solid var(--border-med); border-radius: var(--radius-sm); background: var(--bg-secondary); font-family: var(--mono); font-size: 12px; color: var(--text-primary); text-align: center; outline: none; }
+    #view-retail .qty-input:focus { border-color: var(--red); }
+    #view-retail .price { font-family: var(--mono); font-weight: 500; }
+    #view-retail .total-price { font-family: var(--mono); font-weight: 700; color: var(--text-primary); }
+    #view-retail .add-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; background: var(--red); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    #view-retail .add-btn:hover { background: var(--red-hover); }
+    #view-retail .add-btn:disabled { background: var(--text-tertiary); cursor: not-allowed; }
+    #view-retail .category-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 600; }
+    #view-retail .cat-neuro { background: #EDE9FE; color: #5B21B6; }
+    #view-retail .cat-onco { background: #FFE4E6; color: #9F1239; }
+    #view-retail .cat-infect { background: #E0F2FE; color: #075985; }
+    #view-retail .cat-derm { background: #D1FAE5; color: #065F46; }
+    #view-retail .cat-cardio { background: #FEF3C7; color: #92400E; }
+    #view-retail .cat-immuno { background: #F3E8FF; color: #6B21A8; }
+    #view-retail .table-footer { padding: 12px 18px; border-top: 0.5px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg-secondary); }
+    #view-retail .table-count { font-size: 11.5px; color: var(--text-tertiary); }
+    #view-retail .cart-summary { display: flex; align-items: center; gap: 10px; }
+    #view-retail .cart-total-label { font-size: 11px; color: var(--text-secondary); }
+    #view-retail .cart-total-val { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--red); }
+    #view-retail .checkout-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: var(--red); color: #fff; border: none; border-radius: var(--radius-md); font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; }
+    #view-retail .app-footer { padding: 14px 24px; border-top: 0.5px solid var(--border-light); font-size: 10px; color: var(--text-tertiary); display: flex; align-items: center; justify-content: space-between; background: var(--bg-primary); }
+    #view-retail .footer-links { display: flex; gap: 14px; }
+    #view-retail .footer-links a { color: var(--text-tertiary); text-decoration: none; }
+    #view-retail .footer-links a:hover { color: var(--red); }
+    #view-retail .no-results { padding: 48px 24px; text-align: center; color: var(--text-tertiary); }
+    #view-retail .no-results-icon { font-size: 32px; margin-bottom: 10px; }
+    #view-retail .no-results-text { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    #view-retail .no-results-sub { font-size: 11px; margin-top: 4px; }
+    #view-retail .page { display: none; flex: 1; flex-direction: column; }
+    #view-retail .page.active { display: flex; flex-direction: column; }
+    #view-retail .orders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+    #view-retail .create-order-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; background: var(--red); color: #fff; border: none; border-radius: var(--radius-md); font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    #view-retail .orders-filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    #view-retail .orders-filter-label { font-size: 11px; font-weight: 700; color: var(--red); letter-spacing: 0.3px; }
+    #view-retail .select-filter { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border: 0.5px solid var(--border-med); border-radius: var(--radius-md); background: var(--bg-primary); font-family: var(--font); font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; appearance: none; -webkit-appearance: none; min-width: 140px; }
+    #view-retail .select-filter:focus { outline: none; border-color: var(--red); color: var(--text-primary); }
+    #view-retail .select-wrap { position: relative; }
+    #view-retail .select-wrap::after { content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-tertiary); pointer-events: none; }
+    #view-retail .orders-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    #view-retail .flag-yes { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: #B45309; background: #FEF3C7; padding: 2px 8px; border-radius: 20px; }
+    #view-retail .flag-no { font-size: 11px; color: var(--text-tertiary); }
+    #view-retail .badge-processing { background: #EFF6FF; color: #1D4ED8; }
+    #view-retail .badge-shipped    { background: #F0FDF4; color: #15803D; }
+    #view-retail .badge-pending    { background: #FFFBEB; color: #B45309; }
+    #view-retail .badge-backorder  { background: #FEF2F2; color: #991B1B; }
+    #view-retail .badge-delivered  { background: #F0FDF4; color: #065F46; }
+    #view-retail .badge-cancelled  { background: #F9FAFB; color: #6B7280; }
+    #view-retail .approval-awaiting { color: #B45309; font-weight: 600; font-size: 11.5px; }
+    #view-retail .approval-processed { color: #15803D; font-weight: 600; font-size: 11.5px; }
+    #view-retail .approval-na { color: var(--text-tertiary); font-size: 11.5px; }
+    #view-retail .view-link { font-size: 11.5px; font-weight: 700; color: var(--red); cursor: pointer; text-decoration: none; padding: 4px 10px; border-radius: var(--radius-sm); }
+    #view-retail .view-link:hover { background: var(--red-light); }
+    #view-retail .order-num { font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--text-primary); }
+    #view-retail .order-date { font-size: 11.5px; color: var(--text-secondary); }
+    #view-retail .shipping-method { font-size: 11.5px; color: var(--text-secondary); }
+    #view-retail .warehouse { font-size: 11.5px; color: var(--text-secondary); }
+    #view-retail .order-amount { font-family: var(--mono); font-weight: 600; color: var(--text-primary); }
+    #view-retail tbody tr.needs-action { background: #FFFBF0; }
+    #view-retail .cart-layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+    #view-retail .cart-item-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 0.5px solid var(--border-light); }
+    #view-retail .cart-item-row:last-child { border-bottom: none; }
+    #view-retail .cart-item-info { flex: 1; min-width: 0; }
+    #view-retail .cart-item-name { font-weight: 600; font-size: 13px; color: var(--text-primary); }
+    #view-retail .cart-item-sku { font-size: 10.5px; color: var(--text-tertiary); font-family: var(--mono); margin-top: 1px; }
+    #view-retail .cart-item-meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    #view-retail .cart-item-qty { display: flex; align-items: center; gap: 8px; }
+    #view-retail .cart-qty-btn { width: 26px; height: 26px; border: 0.5px solid var(--border-med); border-radius: var(--radius-sm); background: var(--bg-secondary); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-primary); }
+    #view-retail .cart-qty-val { font-family: var(--mono); font-weight: 600; font-size: 13px; min-width: 24px; text-align: center; color: var(--text-primary); }
+    #view-retail .cart-item-price { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--text-primary); min-width: 70px; text-align: right; }
+    #view-retail .cart-remove-btn { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px; border-radius: 4px; }
+    #view-retail .cart-remove-btn:hover { color: var(--red); background: var(--red-light); }
+    #view-retail .summary-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; }
+    #view-retail .summary-label { font-size: 12px; color: var(--text-secondary); }
+    #view-retail .summary-val { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+    #view-retail .summary-divider { height: 0.5px; background: var(--border-med); margin: 10px 0; }
+    #view-retail .summary-total-row { font-weight: 700; font-size: 15px; color: var(--text-primary); }
+    #view-retail .delivery-toggle { display: flex; gap: 8px; margin-bottom: 4px; }
+    #view-retail .delivery-btn { flex: 1; padding: 8px 6px; border: 0.5px solid var(--border-med); border-radius: var(--radius-md); background: var(--bg-secondary); font-family: var(--font); font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text-secondary); }
+    #view-retail .delivery-btn.active { background: var(--red-light); border-color: var(--red); color: var(--red); font-weight: 700; }
+    #view-retail .checkout-proceed-btn { width: 100%; margin-top: 16px; padding: 12px; background: var(--red); color: #fff; border: none; border-radius: var(--radius-md); font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; }
+    #view-retail .checkout-proceed-btn:disabled { background: var(--text-tertiary); cursor: not-allowed; opacity: 0.6; }
+    #view-retail .checkout-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    #view-retail .co-field-group { display: flex; flex-direction: column; gap: 5px; }
+    #view-retail .co-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); }
+    #view-retail .co-field { display: flex; align-items: center; justify-content: space-between; padding: 10px 13px; border: 0.5px solid var(--border-med); border-radius: var(--radius-md); background: var(--bg-secondary); font-size: 12.5px; color: var(--text-primary); font-weight: 500; }
+    #view-retail .cal-table { width: 100%; border-collapse: collapse; }
+    #view-retail .cal-table th { text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-tertiary); padding: 6px 2px; }
+    #view-retail .cal-table td { text-align: center; padding: 4px 2px; }
+    #view-retail .cal-day { width: 32px; height: 32px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; cursor: not-allowed; color: var(--text-tertiary); background: var(--bg-secondary); border: 0.5px solid var(--border-light); user-select: none; }
+    #view-retail .cal-day.available { background: var(--red-light); color: var(--red); border-color: var(--red-mid); cursor: pointer; font-weight: 700; }
+    #view-retail .cal-day.available:hover { background: var(--red); color: #fff; }
+    #view-retail .cal-day.selected { background: var(--red) !important; color: #fff !important; border-color: var(--red) !important; }
+    #view-retail .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+  </style>
+</head>
+<body style="margin:0;padding:0;overflow:hidden;">
+
+  <!-- ══ GLOBAL TOP NAV ══ -->
+  <nav class="global-nav">
+    <div class="global-nav-brand">J&amp;J MarketFlow</div>
+    <div class="global-nav-tabs">
+      <button class="gnav-tab active"  onclick="switchView('analytics')">📊 Analytics</button>
+      <button class="gnav-tab"         onclick="switchView('waste')">♻️ Waste Mgmt</button>
+      <button class="gnav-tab"         onclick="switchView('admin')">⚙️ Admin</button>
+      <button class="gnav-tab"         onclick="switchView('retail')">🛒 Retail</button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 1: ANALYTICS (Doc 1 / Doc 3)
+  ══════════════════════════════════════════ -->
+  <div id="view-analytics" class="global-view active">
+    <div class="app">
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="jj-logo">J&amp;J</div>
+          <div class="brand-title">MarketFlow<br>Analytics</div>
+          <div class="brand-sub">Johnson &amp; Johnson</div>
+        </div>
+        <div class="nav-items" id="navItems"></div>
+        <div class="sidebar-bottom" id="sidebarBottom"></div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="page-title">Overview</div>
+            <div class="role-tabs">
+              <button class="role-tab active" onclick="analyticsSwitch('marketing', this)">Marketing Analyst</button>
+              <button class="role-tab" onclick="analyticsSwitch('executive', this)">Executive Leader</button>
+              <button class="role-tab" onclick="analyticsSwitch('compliance', this)">Compliance Officer</button>
+            </div>
+          </div>
+          <div class="user-badge">
+            <div class="avatar" id="avatarEl">MA</div>
+            <span id="roleLabel">Role: Marketing Analyst</span>
+          </div>
+        </div>
+        <div class="content" id="mainContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 2: WASTE MANAGEMENT (Doc 2)
+  ══════════════════════════════════════════ -->
+  <div id="view-waste" class="global-view">
+    <div class="waste-body" style="display:flex;height:100%;font-family:'DM Sans',sans-serif;background:#141412;color:#F0EEE8;">
+      <div class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-title">MarketFlow</div>
+        </div>
+        <div class="nav-items" id="waste-navItems">
+          <div class="nav-item active">Home</div>
+          <div class="nav-item">Analytics</div>
+          <div class="nav-item">Reports</div>
+          <div class="nav-item">Inquiries</div>
+        </div>
+        <div id="waste-sidebarBottom" style="padding: 16px;"></div>
+      </div>
+
+      <div class="main">
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="page-title">Overview</div>
+            <div class="role-tabs">
+              <button class="role-tab active" onclick="wasteSwitch('waste', this)">Waste Manager</button>
+              <button class="role-tab" onclick="wasteSwitch('customer', this)">Customer</button>
+              <button class="role-tab" onclick="wasteSwitch('researcher', this)">Lab Researcher</button>
+            </div>
+          </div>
+          <div class="user-badge">
+            <div class="avatar" id="waste-avatarEl">WM</div>
+            <span id="waste-roleLabel">Role: Waste Manager</span>
+          </div>
+        </div>
+
+        <div id="wasteManagerView">
+          <div class="filter-section">
+            <div class="filter-group">
+              <label>Timeline</label>
+              <select id="waste-timelineSelect" onchange="wasteUpdateDashboard()">
+                <option value="weekly">Weekly View</option>
+                <option value="monthly">Monthly View</option>
+                <option value="yearly">Yearly View</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Category</label>
+              <select>
+                <option>All Materials</option>
+                <option>Equipment</option>
+                <option>Chemical</option>
+              </select>
+            </div>
+          </div>
+          <div class="content-grid">
+            <div class="chart-card">
+              <div class="chart-header">Waste Collection Trend (kg)</div>
+              <div class="chart-container">
+                <canvas id="wasteChartCanvas"></canvas>
+              </div>
+            </div>
+            <div class="stats-column">
+              <div class="stat-box"><div class="stat-label">Products Restocked</div><div class="stat-value" id="waste-stat-restocked">1,402</div></div>
+              <div class="stat-box"><div class="stat-label">Total Waste Collected</div><div class="stat-value" id="waste-stat-waste">12,840 kg</div></div>
+              <div class="stat-box"><div class="stat-label">Warehouses</div><div class="stat-value" id="waste-stat-warehouses">08</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="waste-mainContent" style="display:none;width:100%;padding:24px;"></div>
+
+        <div id="waste-logoutModal" class="modal">
+          <div class="modal-content">
+            <p>Log out?</p>
+            <button id="waste-confirmLogout">Yes</button>
+            <button id="waste-cancelLogout">No</button>
+          </div>
+        </div>
+        <div id="waste-productModal" class="modal">
+          <div class="modal-content">
+            <p>Product Page</p>
+            <button id="waste-closeProductModal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 3: ADMIN (Doc 4)
+  ══════════════════════════════════════════ -->
+  <div id="view-admin" class="global-view">
+    <div class="admin-wrap">
+      <div class="sidebar">
+        <div class="sb-brand">
+          <div style="font-family:Georgia,serif;font-size:20px;font-style:italic;font-weight:700;color:#CC0000;line-height:1.15;letter-spacing:-0.3px;">J &amp; J<span style="display:block;">MarketFlow</span></div>
+          <div class="jj-sub">Admin Dashboard</div>
+        </div>
+        <div class="nav">
+          <div class="nav-item active" data-page="dashboard">Dashboard</div>
+          <div class="nav-item" data-page="usermgmt">User Management</div>
+          <div class="nav-item" data-page="inventory">Chemical Inventory</div>
+          <div class="nav-item" data-page="placeholder" data-emoji="⚗️" data-msg="Risk Classification Coming Soon" data-sub="Chemical hazard levels and regulatory tagging will live here">Risk Classification</div>
+          <div class="nav-item" data-page="placeholder" data-emoji="🤖" data-msg="AI Monitoring Coming Soon" data-sub="Track AI decisions, flags, and recommendation logs here">AI Monitoring</div>
+          <div class="nav-item" data-page="placeholder" data-emoji="📋" data-msg="Activity Log Coming Soon" data-sub="Audit trails and admin action history will appear here">Activity Log</div>
+          <div class="nav-item" data-page="chatbot">AI Chatbot</div>
+        </div>
+        <div class="sb-bottom">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="av">JP</div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#f0f0f0;">Jacob Prats</div>
+              <div style="font-size:9px;color:#555;margin-top:1px;">Admin · ID: ADM-4502</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main">
+        <!-- DASHBOARD -->
+        <div class="page active" id="admin-page-dashboard">
+          <div class="topbar">
+            <div class="page-title">Overview</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:11px;color:#555;">Last logged in: March 23rd, 2028 · 8:45 AM</span>
+              <span class="role-pill">SYSTEM ADMINISTRATOR</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="stats-row">
+              <div class="stat"><div class="stat-label">Pending Approvals</div><div class="stat-val" id="admin-pendingStat">3</div></div>
+              <div class="stat"><div class="stat-label">AI Alerts</div><div class="stat-val">2</div></div>
+              <div class="stat"><div class="stat-label">Restricted Added Today</div><div class="stat-val">1</div></div>
+              <div class="stat"><div class="stat-label">Active Users</div><div class="stat-val">2</div></div>
+            </div>
+            <div class="two-col">
+              <div class="col">
+                <div class="card">
+                  <div class="card-title">User Role Management</div>
+                  <div class="role-row"><span>User</span><span class="perm p-view">Limited</span><span class="edit-link">Edit · Delete</span></div>
+                  <div class="role-row"><span>Laboratory</span><span class="perm p-high">High</span><span class="edit-link">Edit · Delete</span></div>
+                  <div class="role-row"><span>Company</span><span class="perm p-med">Medium</span><span class="edit-link">Edit · Delete</span></div>
+                  <div class="role-row"><span>Marketing</span><span class="perm p-view">View Only</span><span class="edit-link">Edit · Delete</span></div>
+                  <button class="assign-btn">+ Assign Role</button>
+                </div>
+                <div class="card">
+                  <div class="card-title">Chemical Approvals</div>
+                  <div class="ap-row"><span>Sulfuric Acid</span><div class="ap-btns"><button class="ap-btn ap-ok">Approve</button><button class="ap-btn ap-no">Reject</button></div></div>
+                  <div class="ap-row"><span>Acetone</span><div class="ap-btns"><button class="ap-btn ap-ok">Approve</button><button class="ap-btn ap-no">Reject</button></div></div>
+                  <div class="ap-row"><span>Formaldehyde</span><div class="ap-btns"><button class="ap-btn ap-ok">Approve</button><button class="ap-btn ap-no">Reject</button></div></div>
+                  <div class="ap-empty">All approvals resolved</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card">
+                  <div class="card-title">AI Alerts</div>
+                  <div class="alert-row"><div class="adot d-red"></div><div style="flex:1"><div class="alert-title">High Risk Chemical Detected</div><div class="alert-sub">Formaldehyde flagged · just now</div></div><div class="alert-cnt">10</div></div>
+                  <div class="alert-row"><div class="adot d-amb"></div><div style="flex:1"><div class="alert-title">Large Quantity Request</div><div class="alert-sub">Unusual bulk order · 2 min ago</div></div><div class="alert-cnt">5</div></div>
+                  <div class="alert-row"><div class="adot d-blu"></div><div style="flex:1"><div class="alert-title">Restricted Access Attempt</div><div class="alert-sub">User ADM-302 · 14 min ago</div></div><div class="alert-cnt">1</div></div>
+                </div>
+                <div class="card">
+                  <div class="card-title">Quick Actions</div>
+                  <button class="qbtn">Review AI Alert</button>
+                  <button class="qbtn admin-manage-chem-btn">Manage Chemicals</button>
+                  <button class="qbtn">Update Risk Classifications</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INVENTORY -->
+        <div class="page" id="admin-page-inventory">
+          <div class="topbar">
+            <div class="page-title">Chemical Inventory Management</div>
+            <span style="font-size:11px;color:#555;">Manage all chemicals and products in the system</span>
+          </div>
+          <div class="inv-content">
+            <div class="toolbar">
+              <input class="search" id="admin-searchInput" placeholder="Search by chemical name, category, or CAS number..." />
+              <div class="dropdown" id="admin-riskDrop">
+                <div class="dd-toggle" id="admin-riskToggle">Filter by Risk <span class="dd-arrow">▾</span></div>
+                <div class="dd-menu">
+                  <div class="dd-item sel" data-val="all" data-label="">All Risk Levels</div>
+                  <div class="dd-sep"></div>
+                  <div class="dd-item" data-val="low"        data-label="Risk: Low"><span class="dot" style="background:#55DD55"></span>Low</div>
+                  <div class="dd-item" data-val="moderate"   data-label="Risk: Moderate"><span class="dot" style="background:#FFB700"></span>Moderate</div>
+                  <div class="dd-item" data-val="high"       data-label="Risk: High"><span class="dot" style="background:#FF6666"></span>High</div>
+                  <div class="dd-item" data-val="restricted" data-label="Restricted"><span class="dot" style="background:#CC88FF"></span>Restricted</div>
+                </div>
+              </div>
+              <div class="dropdown" id="admin-catDrop">
+                <div class="dd-toggle" id="admin-catToggle">Filter by Category <span class="dd-arrow">▾</span></div>
+                <div class="dd-menu">
+                  <div class="dd-item sel" data-val="all" data-label="">All Categories</div>
+                  <div class="dd-sep"></div>
+                  <div class="dd-item" data-val="pain-relief"        data-label="Pain Relief">Pain Relief</div>
+                  <div class="dd-item" data-val="first-aid"          data-label="First Aid">First Aid</div>
+                  <div class="dd-item" data-val="lab-chemical"       data-label="Lab Chemical">Lab Chemical</div>
+                  <div class="dd-item" data-val="industrial"         data-label="Industrial Chemical">Industrial Chemical</div>
+                  <div class="dd-item" data-val="dermatology"        data-label="Dermatology">Dermatology</div>
+                  <div class="dd-item" data-val="oncology"           data-label="Oncology">Oncology</div>
+                  <div class="dd-item" data-val="neuroscience"       data-label="Neuroscience">Neuroscience</div>
+                  <div class="dd-item" data-val="infectious-disease" data-label="Infectious Disease">Infectious Disease</div>
+                </div>
+              </div>
+              <button class="add-btn">+ Add Chemical</button>
+            </div>
+            <div class="pills" id="admin-pills"></div>
+            <div class="grid" id="admin-chemGrid">
+              <div class="ccard" data-risk="low" data-cat="pain-relief"><div class="ccard-hdr"><div><div class="cname">Tylenol Extra Strength Tablets</div><div class="ccat">Category: Pain Relief</div></div><span class="rbadge r-low">Risk: Low</span></div><div class="desc">Acetaminophen medication — relieves mild to moderate pain including headaches, muscle aches, and fever.</div><div class="tags"><span class="tag">OTC</span><span class="tag">Acetaminophen</span><span class="tag">500mg</span></div><div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div></div>
+              <div class="ccard" data-risk="low" data-cat="first-aid"><div class="ccard-hdr"><div><div class="cname">Band-Aid Adhesive Bandages</div><div class="ccat">Category: First Aid</div></div><span class="rbadge r-low">Risk: Low</span></div><div class="desc">Sterile adhesive bandage designed for wound protection and healing.</div><div class="tags"><span class="tag">First Aid</span><span class="tag">Sterile</span><span class="tag">Latex-free</span></div><div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div></div>
+              <div class="ccard b-danger" data-risk="restricted" data-cat="lab-chemical"><div class="ccard-hdr"><div><div class="cname">Formaldehyde Solution 37%</div><div class="ccat">Category: Lab Chemical</div></div><span class="rbadge r-res">Restricted</span></div><div class="desc">Fixative agent used in laboratory tissue preservation. Known carcinogen — requires EHS sign-off and full PPE at all times.</div><div class="tags"><span class="tag">OSHA</span><span class="tag">EPA</span><span class="tag">EHS Required</span><span class="tag">Carcinogen</span></div><div class="actions"><button class="abt">Edit</button><button class="abt abt-pend">Pending Approval</button><button class="abt abt-del">Delete</button></div></div>
+              <div class="ccard b-high" data-risk="high" data-cat="industrial"><div class="ccard-hdr"><div><div class="cname">Sulfuric Acid 98%</div><div class="ccat">Category: Industrial Chemical</div></div><span class="rbadge r-high">Risk: High</span></div><div class="desc">Strong mineral acid used in manufacturing. Highly corrosive — requires specialized storage and handling per GHS classification standards.</div><div class="tags"><span class="tag">GHS</span><span class="tag">OSHA</span><span class="tag">Corrosive</span></div><div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div></div>
+              <div class="ccard" data-risk="moderate" data-cat="dermatology"><div class="ccard-hdr"><div><div class="cname">Neutrogena Hydro Boost Gel</div><div class="ccat">Category: Dermatology</div></div><span class="rbadge r-mod">Risk: Moderate</span></div><div class="desc">Hyaluronic acid-based hydrating gel for dry skin. Contains fragrance compounds that may cause sensitization.</div><div class="tags"><span class="tag">Dermatology</span><span class="tag">Hyaluronic Acid</span><span class="tag">OTC</span></div><div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div></div>
+              <div class="ccard b-danger" data-risk="restricted" data-cat="lab-chemical"><div class="ccard-hdr"><div><div class="cname">Acetone (Reagent Grade)</div><div class="ccat">Category: Lab Chemical</div></div><span class="rbadge r-res">Restricted</span></div><div class="desc">High-purity solvent used in laboratory extraction and cleaning. Highly flammable — requires ventilated storage.</div><div class="tags"><span class="tag">Flammable</span><span class="tag">GHS</span><span class="tag">Lab Use Only</span></div><div class="actions"><button class="abt">Edit</button><button class="abt abt-pend">Pending Approval</button><button class="abt abt-del">Delete</button></div></div>
+              <div class="no-results" id="admin-noResults" style="display:none;">No chemicals match the selected filters.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USER MANAGEMENT -->
+        <div class="page" id="admin-page-usermgmt">
+          <div class="topbar">
+            <div class="page-title">User Management</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:11px;color:#555;">Manage roles, permissions and access control</span>
+              <span class="role-pill">SYSTEM ADMINISTRATOR</span>
+            </div>
+          </div>
+          <div class="um-content">
+            <div style="display:flex;gap:0;margin-bottom:20px;background:#2a2a2a;border-radius:8px;padding:3px;width:fit-content;border:1px solid rgba(255,255,255,0.08);">
+              <button class="um-tab active" id="admin-tabRoles" onclick="adminSwitchUmTab('roles')">Role Permissions</button>
+              <button class="um-tab" id="admin-tabUsers" onclick="adminSwitchUmTab('users')">Users</button>
+            </div>
+            <div id="admin-umRolesPane">
+              <div style="font-size:11px;color:#555;margin-bottom:16px;">Click a role to expand and edit its permissions.</div>
+              <div id="admin-rolesAccordion">
+                <!-- Admin role block -->
+                <div class="role-block" id="admin-rb-admin">
+                  <div class="role-block-hdr" onclick="adminToggleRole('admin')">
+                    <div style="display:flex;align-items:center;gap:12px;"><span class="um-role-badge ur-admin">Admin</span><span style="font-size:12px;font-weight:500;color:#f0f0f0;">System Administrator</span></div>
+                    <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:10px;color:#555;">2 users</span><span class="rb-arrow">▾</span></div>
+                  </div>
+                  <div class="role-block-body" id="admin-rbb-admin">
+                    <div class="perm-section-title">Access &amp; Visibility</div>
+                    <div class="perm-grid">
+                      <div class="perm-row"><span>View all chemical inventory</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>Add / edit chemicals</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>Approve chemical entries</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>View restricted chemicals</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>Manage user roles</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>View activity logs</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>Place orders</span><div class="toggle on"></div></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Lab role block -->
+                <div class="role-block" id="admin-rb-lab">
+                  <div class="role-block-hdr" onclick="adminToggleRole('lab')">
+                    <div style="display:flex;align-items:center;gap:12px;"><span class="um-role-badge ur-lab">Laboratory</span><span style="font-size:12px;font-weight:500;color:#f0f0f0;">Lab Researchers &amp; EHS Officers</span></div>
+                    <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:10px;color:#555;">3 users</span><span class="rb-arrow">▾</span></div>
+                  </div>
+                  <div class="role-block-body" id="admin-rbb-lab" style="display:none;">
+                    <div class="perm-section-title">Access &amp; Visibility</div>
+                    <div class="perm-grid">
+                      <div class="perm-row"><span>View all chemical inventory</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>Add / edit chemicals</span><div class="toggle off"></div></div>
+                      <div class="perm-row"><span>View restricted chemicals</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle off"></div></div>
+                      <div class="perm-row"><span>Place orders</span><div class="toggle on"></div></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Marketing role block -->
+                <div class="role-block" id="admin-rb-mktg">
+                  <div class="role-block-hdr" onclick="adminToggleRole('mktg')">
+                    <div style="display:flex;align-items:center;gap:12px;"><span class="um-role-badge ur-mktg">Marketing</span><span style="font-size:12px;font-weight:500;color:#f0f0f0;">Marketing &amp; Analytics Team</span></div>
+                    <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:10px;color:#555;">2 users</span><span class="rb-arrow">▾</span></div>
+                  </div>
+                  <div class="role-block-body" id="admin-rbb-mktg" style="display:none;">
+                    <div class="perm-section-title">Access &amp; Visibility</div>
+                    <div class="perm-grid">
+                      <div class="perm-row"><span>View all chemical inventory</span><div class="toggle off"></div></div>
+                      <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle on"></div></div>
+                      <div class="perm-row"><span>View restricted chemicals</span><div class="toggle off"></div></div>
+                      <div class="perm-row"><span>Place orders</span><div class="toggle off"></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="admin-umUsersPane" style="display:none;">
+              <div class="um-toolbar">
+                <input class="um-search" id="admin-umSearch" placeholder="Search by name, email, or role..." />
+                <button class="um-add-btn" id="admin-umAddBtn">+ Add User</button>
+              </div>
+              <div style="background:#212121;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;">
+                <table class="um-table">
+                  <thead><tr><th>User</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody id="admin-umTableBody">
+                    <tr data-name="jacob prats" data-role="admin"><td><div class="um-name-cell"><div class="um-avatar">JP</div><div><div class="um-name">Jacob Prats</div><div class="um-email">j.prats@jnj.com</div></div></div></td><td><span class="um-role-badge ur-admin">Admin</span></td><td>IT &amp; Systems</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                    <tr data-name="sarah chen" data-role="laboratory"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(68,153,255,0.15);color:#66AAFF;">SC</div><div><div class="um-name">Sarah Chen</div><div class="um-email">s.chen@jnj.com</div></div></div></td><td><span class="um-role-badge ur-lab">Laboratory</span></td><td>R&amp;D Labs</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                    <tr data-name="marcus williams" data-role="compliance"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(200,140,0,0.15);color:#FFB700;">MW</div><div><div class="um-name">Marcus Williams</div><div class="um-email">m.williams@jnj.com</div></div></div></td><td><span class="um-role-badge ur-comp">Compliance</span></td><td>EHS &amp; Safety</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                    <tr data-name="priya patel" data-role="marketing"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(130,0,210,0.15);color:#CC88FF;">PP</div><div><div class="um-name">Priya Patel</div><div class="um-email">p.patel@jnj.com</div></div></div></td><td><span class="um-role-badge ur-mktg">Marketing</span></td><td>Marketing &amp; Analytics</td><td><span class="status-dot s-pending"></span>Pending</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                    <tr data-name="tom nguyen" data-role="user"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(90,90,90,0.25);color:#aaa;">TN</div><div><div class="um-name">Tom Nguyen</div><div class="um-email">t.nguyen@jnj.com</div></div></div></td><td><span class="um-role-badge ur-user">User</span></td><td>Procurement</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD USER MODAL -->
+        <div class="um-modal-overlay" id="admin-umModal">
+          <div class="um-modal">
+            <h3>Add New User</h3>
+            <div class="um-field"><label>Full Name</label><input type="text" id="admin-umNewName" placeholder="e.g. Jane Smith" /></div>
+            <div class="um-field"><label>Email</label><input type="text" id="admin-umNewEmail" placeholder="e.g. j.smith@jnj.com" /></div>
+            <div class="um-field"><label>Department</label><input type="text" id="admin-umNewDept" placeholder="e.g. R&amp;D Labs" /></div>
+            <div class="um-field"><label>Role</label>
+              <select id="admin-umNewRole">
+                <option value="admin">Admin</option>
+                <option value="laboratory">Laboratory</option>
+                <option value="compliance">Compliance</option>
+                <option value="marketing">Marketing</option>
+                <option value="user" selected>User</option>
+              </select>
+            </div>
+            <div class="um-modal-btns">
+              <button class="um-modal-cancel" id="admin-umModalCancel">Cancel</button>
+              <button class="um-modal-save" id="admin-umModalSave">Add User</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHATBOT -->
+        <div class="page" id="admin-page-chatbot">
+          <div class="topbar">
+            <div class="page-title">AI Chatbot</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:11px;color:#555;">Compliance &amp; Risk Management</span>
+              <span class="role-pill-solid">ADMIN MODE</span>
+            </div>
+          </div>
+          <div class="chat-area" id="admin-chatArea">
+            <div class="msg"><div class="msg-av bot-av">AI</div><div class="bubble bot-b">Hello Jacob! I'm your compliance AI assistant. I can help you review chemical risk classifications, flag unusual purchasing patterns, and manage AI recommendation settings. What would you like to do today?</div></div>
+            <div class="msg user"><div class="msg-av usr-av">JP</div><div class="bubble usr-b">Flag all high-risk chemicals added in the last 24 hours.</div></div>
+            <div class="msg"><div class="msg-av bot-av">AI</div><div class="bubble bot-b">I found <strong>2 high-risk entries</strong> added in the last 24 hours:<br><br><span class="tag-r">HIGH RISK</span>&nbsp;<strong>Formaldehyde 37%</strong> — awaiting admin approval. Classified as a known carcinogen.<br><br><span class="tag-r">RESTRICTED</span>&nbsp;<strong>Sulfuric Acid 98%</strong> — access attempted by 2 users without correct permissions.<br><br>Would you like me to send alert notifications to EHS officers?</div></div>
+          </div>
+          <div class="chips">
+            <div class="chip admin-chip">Review pending approvals</div>
+            <div class="chip admin-chip">Show unusual orders</div>
+            <div class="chip admin-chip">Update AI restrictions</div>
+            <div class="chip admin-chip">Generate compliance report</div>
+          </div>
+          <div class="input-row">
+            <input class="chat-in" id="admin-chatInput" placeholder="Ask about chemicals, compliance, user access..." />
+            <button class="send-btn" id="admin-sendBtn">Send</button>
+          </div>
+        </div>
+
+        <!-- PLACEHOLDER -->
+        <div class="page" id="admin-page-placeholder">
+          <div class="topbar"><div class="page-title" id="admin-placeholderTitle">Coming Soon</div></div>
+          <div class="content" style="display:flex;align-items:center;justify-content:center;flex:1;">
+            <div style="text-align:center;color:#555;">
+              <div style="font-size:52px;margin-bottom:16px;" id="admin-placeholderEmoji">⚙️</div>
+              <div style="font-size:16px;font-weight:600;color:#f0f0f0;margin-bottom:8px;" id="admin-placeholderName">Coming Soon</div>
+              <div style="font-size:12px;color:#999;margin-top:4px;" id="admin-placeholderSub">This tab is under construction</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       VIEW 4: RETAIL / SALES (Doc 5)
+  ══════════════════════════════════════════ -->
+  <div id="view-retail" class="global-view">
+    <div class="retail-wrap">
+      <div class="sidebar">
+        <div class="sidebar-brand">
+          <div class="jj-logo">J&amp;J</div>
+          <div class="brand-title">MarketFlow</div>
+          <div class="brand-sub">Johnson &amp; Johnson</div>
+        </div>
+        <div class="nav-items">
+          <div class="nav-section-label">Navigation</div>
+          <a class="nav-item active" onclick="retailShowPage('home')" id="retail-nav-home">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6l6-4 6 4v8H2z"/><path d="M6 14V9h4v5"/></svg>
+            Home
+          </a>
+          <a class="nav-item" onclick="retailShowPage('products')" id="retail-nav-products">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7h6M5 10h4"/></svg>
+            Products
+          </a>
+          <a class="nav-item" onclick="retailShowPage('ai')" id="retail-nav-ai">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2.5 1.5"/></svg>
+            AI Assistance
+          </a>
+          <div class="nav-section-label" style="margin-top:6px;">Orders</div>
+          <a class="nav-item" onclick="retailShowPage('cart')" id="retail-nav-cart">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h10l-1.5 7H4.5L3 3z"/><circle cx="6" cy="13" r="1"/><circle cx="10.5" cy="13" r="1"/></svg>
+            My Cart
+            <span class="nav-badge" id="retail-cartBadge">3</span>
+          </a>
+          <a class="nav-item" onclick="retailShowPage('orders')" id="retail-nav-orders">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H3a1 1 0 00-1 1v11l2-2 2 2 2-2 2 2 2-2 1 1V3a1 1 0 00-1-1z"/><path d="M5 6h6M5 9h4"/></svg>
+            My Orders
+          </a>
+          <div class="nav-section-label" style="margin-top:6px;">Finance</div>
+          <a class="nav-item" onclick="retailShowPage('banks')" id="retail-nav-banks">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="4.5" width="13" height="9" rx="1.5"/><path d="M5 8.5h6M8 7v3"/></svg>
+            Cards &amp; Banks
+          </a>
+        </div>
+        <div class="sidebar-bottom">
+          <div class="user-pill">
+            <div class="user-avatar">SR</div>
+            <div>
+              <div class="user-name">Sean Rivers</div>
+              <div class="user-role">Sales Manager</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="welcome-chip"><div class="welcome-chip-dot"></div>Welcome back, Sean Rivers</div>
+          </div>
+          <div class="topbar-right">
+            <button class="notif-btn" title="Notifications"><div class="notif-dot"></div>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a5 5 0 015 5v3l1 2H2l1-2V7a5 5 0 015-5z"/><path d="M6.5 13.5a1.5 1.5 0 003 0"/></svg>
+            </button>
+            <button class="topbar-btn">Help</button>
+            <button class="topbar-btn danger">Log Out</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0;padding:0;flex:1;overflow:hidden;">
+
+          <!-- HOME PAGE -->
+          <div id="retail-page-home" class="page active" style="padding:24px;overflow-y:auto;">
+            <div class="page-header">
+              <div><div class="page-title">Product Catalog</div><div class="page-subtitle">Browse, filter, and order pharmaceutical products</div></div>
+            </div>
+            <div class="stats-row">
+              <div class="stat-card"><div class="stat-label">Total Products</div><div class="stat-value">128</div><div class="stat-meta"><span class="up">+6</span> added this month</div></div>
+              <div class="stat-card"><div class="stat-label">Fully Available</div><div class="stat-value red">84</div><div class="stat-meta">65% of catalog</div></div>
+              <div class="stat-card"><div class="stat-label">Items in Cart</div><div class="stat-value">3</div><div class="stat-meta">Est. total <strong>$621</strong></div></div>
+              <div class="stat-card" onclick="retailShowPage('orders')" style="cursor:pointer;"><div class="stat-label">Pending Orders</div><div class="stat-value">7</div><div class="stat-meta"><span class="down">2</span> require action →</div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">All Products <span class="panel-title-badge" id="retail-resultCount">10 results</span></div>
+                <div class="filter-bar">
+                  <span class="filter-label">Filter</span>
+                  <button class="filter-chip active" data-filter="all" onclick="retailSetFilter(this,'all')">All</button>
+                  <button class="filter-chip" data-filter="Neuroscience" onclick="retailSetFilter(this,'Neuroscience')"><span class="chip-dot"></span>Neuroscience</button>
+                  <button class="filter-chip" data-filter="Oncology" onclick="retailSetFilter(this,'Oncology')"><span class="chip-dot"></span>Oncology</button>
+                  <button class="filter-chip" data-filter="Infectious Disease" onclick="retailSetFilter(this,'Infectious Disease')"><span class="chip-dot"></span>Infectious Disease</button>
+                  <button class="filter-chip" data-filter="Dermatology" onclick="retailSetFilter(this,'Dermatology')"><span class="chip-dot"></span>Dermatology</button>
+                  <button class="filter-chip" data-filter="Cardiology" onclick="retailSetFilter(this,'Cardiology')"><span class="chip-dot"></span>Cardiology</button>
+                  <button class="filter-chip" data-filter="Immunology" onclick="retailSetFilter(this,'Immunology')"><span class="chip-dot"></span>Immunology</button>
+                </div>
+              </div>
+              <div class="filter-toolbar">
+                <button class="filter-chip bestseller" id="retail-bestsellerChip" onclick="retailToggleBestseller()">★ Best Sellers Only</button>
+                <button class="filter-chip" id="retail-availableChip" onclick="retailToggleAvailable()">✓ Available Only</button>
+                <div class="search-wrap">
+                  <svg class="search-icon" width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="5.5" cy="5.5" r="4"/><path d="M9.5 9.5l2.5 2.5"/></svg>
+                  <input class="search-input" id="retail-searchInput" type="text" placeholder="Search products, SKUs…" oninput="retailRender()" />
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Chemical Components</th><th>Pack Size</th><th>Unit Price</th><th>Availability</th><th>Hazardous</th><th>Quantity</th><th>Total</th><th></th></tr></thead>
+                  <tbody id="retail-tableBody"></tbody>
+                </table>
+                <div id="retail-noResults" class="no-results" style="display:none;"><div class="no-results-icon">🔍</div><div class="no-results-text">No products found</div><div class="no-results-sub">Try adjusting your filters or search term</div></div>
+              </div>
+              <div class="table-footer">
+                <div class="table-count" id="retail-tableCountLabel">Showing <strong>10</strong> of <strong>10</strong> products</div>
+                <div class="cart-summary">
+                  <span class="cart-total-label">Cart Total</span>
+                  <span class="cart-total-val" id="retail-cartTotal">$0.00</span>
+                  <button class="checkout-btn" onclick="retailShowPage('cart')">View Cart</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ORDERS PAGE -->
+          <div id="retail-page-orders" class="page" style="padding:24px;overflow-y:auto;">
+            <div class="orders-header">
+              <div><div class="page-title">My Orders</div><div class="page-subtitle">Track, manage, and review your submitted orders</div><button class="create-order-btn">+ Create New Order</button></div>
+              <div class="orders-filter-row">
+                <span class="orders-filter-label">Filter Orders</span>
+                <div class="select-wrap"><select class="select-filter" id="retail-statusFilter" onchange="retailRenderOrders()"><option value="all">Order Status</option><option value="Processing">Processing</option><option value="Shipped">Shipped</option><option value="Pending">Pending</option><option value="Backordered">Backordered</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option></select></div>
+                <div class="select-wrap"><select class="select-filter" id="retail-flaggedFilter" onchange="retailRenderOrders()"><option value="all">Flagged</option><option value="Yes">Flagged Only</option><option value="No">Not Flagged</option></select></div>
+                <div class="select-wrap"><select class="select-filter" id="retail-approvalFilter" onchange="retailRenderOrders()"><option value="all">Approval Status</option><option value="Awaiting Approval">Awaiting Approval</option><option value="Processed">Processed</option><option value="N/A">N/A</option></select></div>
+              </div>
+            </div>
+            <div class="orders-stats">
+              <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">7</div><div class="stat-meta">This quarter</div></div>
+              <div class="stat-card"><div class="stat-label">Pending Action</div><div class="stat-value red">2</div><div class="stat-meta">Awaiting approval</div></div>
+              <div class="stat-card"><div class="stat-label">Flagged Orders</div><div class="stat-value">3</div><div class="stat-meta">Require review</div></div>
+              <div class="stat-card"><div class="stat-label">Total Spend</div><div class="stat-value" style="font-size:18px;">$18.1K</div><div class="stat-meta">Quarter to date</div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">Order History <span class="panel-title-badge" id="retail-ordersCount">7 orders</span></div>
+                <div class="search-wrap">
+                  <svg class="search-icon" width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="5.5" cy="5.5" r="4"/><path d="M9.5 9.5l2.5 2.5"/></svg>
+                  <input class="search-input" id="retail-ordersSearchInput" type="text" placeholder="Search order #, warehouse…" oninput="retailRenderOrders()" />
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table><thead><tr><th>Order #</th><th>Order Date</th><th>Status</th><th>Flagged</th><th>Flagged Reason</th><th>Manager Approval</th><th>Amount</th><th>Shipping</th><th>Warehouse</th><th></th></tr></thead><tbody id="retail-ordersTableBody"></tbody></table>
+                <div id="retail-ordersNoResults" class="no-results" style="display:none;"><div class="no-results-icon">📋</div><div class="no-results-text">No orders match your filters</div></div>
+              </div>
+              <div class="table-footer">
+                <div class="table-count" id="retail-ordersCountLabel">Showing <strong>7</strong> of <strong>7</strong> orders</div>
+                <div class="cart-summary"><span class="cart-total-label">Quarter Spend</span><span class="cart-total-val" id="retail-ordersSpend">$18,150.00</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CART PAGE -->
+          <div id="retail-page-cart" class="page" style="padding:24px;overflow-y:auto;">
+            <div class="page-header"><div><div class="page-title">My Cart</div><div class="page-subtitle">Review your items before proceeding to checkout</div></div></div>
+            <div class="cart-layout">
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="panel-title">Cart Items <span class="panel-title-badge" id="retail-cartItemCount">0 items</span></div>
+                  <button class="topbar-btn" onclick="retailClearCart()" style="font-size:11px;color:#CC0000;">✕ Clear Cart</button>
+                </div>
+                <div id="retail-cartEmpty" style="padding:48px 24px;text-align:center;">
+                  <div style="font-size:36px;margin-bottom:12px;">🛒</div>
+                  <div style="font-weight:600;color:var(--text-secondary);font-size:13px;">Your cart is empty</div>
+                  <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">Add products from the Home page</div>
+                  <button class="create-order-btn" style="margin-top:14px;" onclick="retailShowPage('home')">Browse Products</button>
+                </div>
+                <div id="retail-cartItemsBody"></div>
+              </div>
+              <div>
+                <div class="panel">
+                  <div class="panel-header"><div class="panel-title">Order Summary</div></div>
+                  <div style="padding:18px;">
+                    <div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-val" id="retail-summarySubtotal">$0.00</span></div>
+                    <div class="summary-row"><span class="summary-label">Est. Tax (8.25%)</span><span class="summary-val" id="retail-summaryTax">$0.00</span></div>
+                    <div class="summary-row"><span class="summary-label">Shipping</span><span class="summary-val" style="color:#15803D;font-weight:600;">Calculated at checkout</span></div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row summary-total-row"><span>Est. Total</span><span id="retail-summaryTotal">$0.00</span></div>
+                    <div style="margin-top:18px;">
+                      <div class="summary-label" style="margin-bottom:8px;">Delivery Mode</div>
+                      <div class="delivery-toggle">
+                        <button class="delivery-btn active" id="retail-deliveryPickup" onclick="retailSetDelivery('pickup')">📦 Pickup</button>
+                        <button class="delivery-btn" id="retail-deliveryDrop" onclick="retailSetDelivery('drop')">🚚 Delivery</button>
+                      </div>
+                    </div>
+                    <button class="checkout-proceed-btn" id="retail-proceedBtn" onclick="retailShowPage('checkout')" disabled>Proceed to Checkout →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHECKOUT PAGE -->
+          <div id="retail-page-checkout" class="page" style="padding:24px;overflow-y:auto;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <button class="topbar-btn" onclick="retailShowPage('cart')" style="font-size:11px;">← Back to Cart</button>
+                  <div class="page-title">Order #23 Summary</div>
+                </div>
+                <div class="page-subtitle" style="margin-top:4px;">Review your order details before final submission</div>
+              </div>
+            </div>
+            <div class="checkout-layout">
+              <div>
+                <div class="panel" style="margin-bottom:16px;">
+                  <div class="panel-header"><div class="panel-title">Items in this Order <span class="panel-title-badge" id="retail-coItemCount">0 items</span></div><div class="summary-val" id="retail-coTotalCost" style="font-size:16px;color:#CC0000;">$0.00</div></div>
+                  <div class="table-wrap"><table><thead><tr><th>Product</th><th>SKU</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead><tbody id="retail-coItemsBody"></tbody></table></div>
+                </div>
+                <div class="panel">
+                  <div class="panel-header"><div class="panel-title">Payment Details</div></div>
+                  <div style="padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="co-field-group" style="grid-column:1/-1;"><label class="co-label">Card Number</label><div class="co-field"><span>•••• •••• •••• 4821</span></div></div>
+                    <div class="co-field-group" style="grid-column:1/-1;"><label class="co-label">Card Holder</label><div class="co-field"><span>Sean Rivers</span></div></div>
+                    <div class="co-field-group"><label class="co-label">Expiration</label><div class="co-field"><span>09/27</span></div></div>
+                    <div class="co-field-group"><label class="co-label">CCV</label><div class="co-field"><span>•••</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="panel" style="margin-bottom:16px;">
+                  <div class="panel-header"><div class="panel-title" style="color:#CC0000;">📍 Nearby Warehouse Locations</div></div>
+                  <div style="padding:14px 16px 16px;">
+                    <div style="width:100%;height:260px;border-radius:8px;border:0.5px solid var(--border-med);background:#d4e8f0;overflow:hidden;">
+                      <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;" preserveAspectRatio="xMidYMid meet">
+                        <rect width="960" height="600" fill="#d4e8f0"/>
+                        <path d="M120,180 L160,140 L220,130 L300,120 L400,115 L500,118 L600,125 L700,130 L780,140 L840,160 L870,190 L860,240 L830,280 L820,320 L810,370 L790,400 L760,420 L720,440 L680,450 L640,460 L600,465 L560,460 L520,455 L480,460 L440,470 L400,475 L360,470 L320,460 L280,445 L240,430 L200,410 L170,385 L150,350 L130,310 L115,270 L110,230 Z" fill="#c8dba0" stroke="#8aa860" stroke-width="2"/>
+                        <text x="480" y="540" font-size="11" fill="#5599aa" text-anchor="middle" font-family="sans-serif">Gulf of Mexico</text>
+                        <text x="480" y="200" font-size="13" fill="#668855" text-anchor="middle" font-family="sans-serif" font-weight="600">United States</text>
+                        <g style="cursor:pointer;" onclick="alert('Dallas J&J Warehouse selected!')"><circle cx="370" cy="370" r="14" fill="#CC0000" opacity="0.15"/><circle cx="370" cy="370" r="8" fill="#CC0000"/><circle cx="370" cy="370" r="3" fill="white"/><text x="370" y="358" font-size="9" fill="#CC0000" text-anchor="middle" font-family="sans-serif" font-weight="700">DAL</text></g>
+                        <g style="cursor:pointer;" onclick="alert('Houston J&J Warehouse selected!')"><circle cx="395" cy="415" r="14" fill="#CC0000" opacity="0.15"/><circle cx="395" cy="415" r="8" fill="#CC0000"/><circle cx="395" cy="415" r="3" fill="white"/><text x="395" y="403" font-size="9" fill="#CC0000" text-anchor="middle" font-family="sans-serif" font-weight="700">HOU</text></g>
+                        <g style="cursor:pointer;" onclick="alert('Chicago J&J Distribution selected!')"><circle cx="530" cy="230" r="14" fill="#CC0000" opacity="0.15"/><circle cx="530" cy="230" r="8" fill="#CC0000"/><circle cx="530" cy="230" r="3" fill="white"/><text x="530" y="218" font-size="9" fill="#CC0000" text-anchor="middle" font-family="sans-serif" font-weight="700">CHI</text></g>
+                        <g style="cursor:pointer;" onclick="alert('Atlanta J&J Warehouse selected!')"><circle cx="620" cy="330" r="14" fill="#CC0000" opacity="0.15"/><circle cx="620" cy="330" r="8" fill="#CC0000"/><circle cx="620" cy="330" r="3" fill="white"/><text x="620" y="318" font-size="9" fill="#CC0000" text-anchor="middle" font-family="sans-serif" font-weight="700">ATL</text></g>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <button class="checkout-proceed-btn" onclick="alert('Order submitted! Order #23 has been placed successfully.')">✓ Submit Order</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PLACEHOLDER PAGES -->
+          <div id="retail-page-products" class="page" style="padding:24px;align-items:center;justify-content:center;"><div class="no-results"><div class="no-results-icon">🗂️</div><div class="no-results-text">Products page coming soon</div></div></div>
+          <div id="retail-page-ai" class="page" style="padding:24px;align-items:center;justify-content:center;"><div class="no-results"><div class="no-results-icon">🤖</div><div class="no-results-text">AI Assistance coming soon</div></div></div>
+          <div id="retail-page-banks" class="page" style="padding:24px;align-items:center;justify-content:center;"><div class="no-results"><div class="no-results-icon">💳</div><div class="no-results-text">Cards &amp; Banks coming soon</div></div></div>
+        </div>
+
+        <div class="app-footer"><span>Privacy | J&amp;J MarketFlow Inc. All Rights Reserved © 2025</span><div class="footer-links"><a href="#">Terms</a><a href="#">Privacy Policy</a><a href="#">Support</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SCRIPTS
+  ══════════════════════════════════════════ -->
+
+  <!-- Global nav switcher -->
+  <script>
+    function switchView(name) {
+      document.querySelectorAll('.global-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.gnav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+      document.querySelector(`.gnav-tab[onclick*="'${name}'"]`).classList.add('active');
+    }
+  </script>
+
+  <!-- ── ANALYTICS VIEW SCRIPT (IIFE scoped) ── -->
+  <script>
+  (function() {
+    let currentRole = 'marketing';
+    let charts = {};
+
+    const roleConfig = {
+      marketing: { label:'Role: Marketing Analyst', avatar:'MA', nav:['Dashboard','Campaign Analytics','SKU Reports','Demographics'], active:'Dashboard', filters:true },
+      executive: { label:'Role: Executive Leader', avatar:'EL', nav:['Dashboard','Forecasting','Financial Trends'], active:'Dashboard', filters:false },
+      compliance: { label:'Role: Compliance Officer', avatar:'CO', nav:['Dashboard','Chemical Trends','Audit Logs','Regulatory Reports'], active:'Dashboard', filters:false }
+    };
+
+    function destroyCharts() {
+      Object.values(charts).forEach(c => { try { c.destroy(); } catch(e) {} });
+      charts = {};
+    }
+
+    function canvasEl(id) {
+      return `<div class="chart-wrap"><canvas id="${id}"></canvas></div>`;
+    }
+
+    window.analyticsSwitch = function(role, btn) {
+      destroyCharts();
+      currentRole = role;
+      document.querySelectorAll('#view-analytics .role-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('roleLabel').textContent = roleConfig[role].label;
+      document.getElementById('avatarEl').textContent = roleConfig[role].avatar;
+      renderSidebar();
+      renderContent();
+    };
+
+    function renderSidebar() {
+      const r = roleConfig[currentRole];
+      const nav = document.getElementById('navItems');
+      nav.innerHTML = '';
+      r.nav.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'nav-item' + (item === r.active ? ' active' : '');
+        el.textContent = item;
+        el.onclick = () => { document.querySelectorAll('#view-analytics .nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); };
+        nav.appendChild(el);
+      });
+      const bottom = document.getElementById('sidebarBottom');
+      bottom.innerHTML = '';
+      const logout = document.createElement('button');
+      logout.className = 'logout-btn'; logout.textContent = 'Logout';
+      bottom.appendChild(logout);
+      if (r.filters) {
+        const fbtn = document.createElement('button'); fbtn.className = 'filter-btn'; fbtn.textContent = 'Filter Panel'; bottom.appendChild(fbtn);
+        [{ label:'Date Range', id:'f-date', opts:['All Time','Weekly','Monthly','Quarterly','Yearly'] },
+         { label:'Product Classification', id:'f-product', opts:['All','Neuroscience','Oncology','Infectious Diseases','Consumer'] },
+         { label:'Region', id:'f-region', opts:['All Regions','North America','Europe','APAC','Africa'] },
+         { label:'Customer Demographic', id:'f-demo', opts:['All','Retail Buyers','Labs','Consumers'] }
+        ].forEach(f => {
+          const lbl = document.createElement('div'); lbl.className = 'filter-label'; lbl.textContent = f.label; bottom.appendChild(lbl);
+          const sel = document.createElement('select'); sel.className = 'filter-select'; sel.id = f.id;
+          f.opts.forEach(o => { const opt = document.createElement('option'); opt.textContent = o; sel.appendChild(opt); });
+          bottom.appendChild(sel);
+        });
+        const apply = document.createElement('button'); apply.className = 'apply-btn'; apply.textContent = 'Apply Filter'; bottom.appendChild(apply);
+      }
+    }
+
+    function renderContent() {
+      const el = document.getElementById('mainContent');
+      if (currentRole === 'marketing') el.innerHTML = marketingHTML();
+      else if (currentRole === 'executive') el.innerHTML = executiveHTML();
+      else el.innerHTML = complianceHTML();
+      setTimeout(() => {
+        if (currentRole === 'marketing') initMarketingCharts();
+        else if (currentRole === 'executive') initExecutiveCharts();
+        else initComplianceCharts();
+      }, 60);
+    }
+
+    function marketingHTML() {
+      return `
+        <div class="section-label">KPI Summary</div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value red">$48.2M</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-value">12,847</div></div>
+          <div class="kpi-card"><div class="kpi-label">Avg Order Value</div><div class="kpi-value">$3,751</div></div>
+          <div class="kpi-card"><div class="kpi-label">Search Frequency</div><div class="kpi-value">24.1K</div></div>
+          <div class="kpi-card"><div class="kpi-label">Active Campaigns</div><div class="kpi-value red">7</div></div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Revenue Trend — Monthly</div>
+            <div class="chart-legend"><span class="legend-item"><span class="legend-swatch" style="background:#CC0000"></span>Revenue ($M)</span></div>
+            ${canvasEl('revChart')}
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Demographic Trend Graph</div>
+            <div class="chart-legend"><span class="legend-item"><span class="legend-swatch" style="background:#CC0000"></span>Retail Buyers</span><span class="legend-item"><span class="legend-swatch" style="background:#990000"></span>Labs</span></div>
+            ${canvasEl('demoChart')}
+          </div>
+        </div>
+        <div class="section-label">Campaign Performance Table</div>
+        <div class="table-section">
+          <table><thead><tr><th>Campaign</th><th>SKU</th><th>Sales</th><th>Search Frequency</th><th>ROI</th></tr></thead>
+          <tbody>
+            <tr><td>211</td><td>285</td><td>515</td><td>3,394</td><td class="td-red td-mono">$10,000,000</td></tr>
+            <tr><td>13</td><td>15</td><td>38</td><td>293</td><td class="td-mono">$38,758,527</td></tr>
+            <tr><td>6</td><td>8</td><td>26</td><td>3,902</td><td class="td-mono">$9,838,496</td></tr>
+            <tr><td>87</td><td>35</td><td>41</td><td>1,031</td><td class="td-mono">$1,048,085</td></tr>
+            <tr style="background:var(--red-light)"><td>36</td><td>44</td><td>86</td><td>324</td><td class="td-red td-mono">$113,274,767</td></tr>
+          </tbody></table>
+        </div>
+        <div class="footer-actions"><button class="dl-btn">Export Report</button><button class="dl-btn">Download SKU Report</button></div>`;
+    }
+
+    function executiveHTML() {
+      const forecastData = [{cat:'Neuroscience',pct:91},{cat:'Oncology',pct:88},{cat:'Infectious Diseases',pct:86},{cat:'Consumer Products',pct:94}];
+      const forecastRows = forecastData.map(f => `<div class="forecast-metric"><span style="font-size:12px;color:var(--text-secondary)">${f.cat}</span><div style="display:flex;align-items:center;gap:8px"><div class="forecast-bar-bg"><div class="forecast-bar" style="width:${f.pct}%"></div></div><span class="accuracy-badge">${f.pct}%</span></div></div>`).join('');
+      return `
+        <div class="section-label">KPI Overview Panel</div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value red">$48.2M</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-value">12,847</div></div>
+          <div class="kpi-card"><div class="kpi-label">Avg Order Value</div><div class="kpi-value">$3,751</div></div>
+          <div class="kpi-card"><div class="kpi-label">Backorder %</div><div class="kpi-value red">2.4%</div></div>
+          <div class="kpi-card"><div class="kpi-label">Inventory Turnover</div><div class="kpi-value">8.3x</div></div>
+        </div>
+        <div class="section-label">Trend Analysis Graph</div>
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title">Monthly Revenue &amp; Orders Over Time</div>
+          <div class="chart-legend"><span class="legend-item"><span class="legend-swatch" style="background:#CC0000"></span>Revenue</span><span class="legend-item"><span class="legend-swatch" style="background:#990000"></span>Orders</span></div>
+          ${canvasEl('execTrend')}
+        </div>
+        <div class="section-label">Demand Forecast Panel</div>
+        <div class="chart-row">
+          <div class="chart-card"><div class="chart-title">AI Demand Prediction</div>${canvasEl('demandChart')}</div>
+          <div class="chart-card"><div class="chart-title">Forecast Accuracy by Classification</div>${forecastRows}</div>
+        </div>
+        <div class="footer-actions"><button class="dl-btn">Generate Forecast Report</button><button class="dl-btn">Download Budget Forecast</button></div>`;
+    }
+
+    function complianceHTML() {
+      const auditEntries = [['09:14:02','SKU NCI-4482 qty adjusted: 500→420','admin.torres'],['09:31:47','Reorder triggered: ONC-7731 below threshold','sys.auto'],['10:05:18','INF-1105 export restricted — compliance hold','compliance.patel'],['10:22:33','SKU CON-2290 inventory reconciled','warehouse.chen'],['11:01:09','NCI-8850 demand spike — alert raised','sys.monitor'],['11:44:55','Budget forecast regenerated for Q3','exec.kumar'],['12:10:33','Chemical trend report accessed','compliance.officer'],['12:38:12','Audit log export requested','compliance.patel']];
+      const auditRows = auditEntries.map(([t,a,u]) => `<div class="audit-row"><span class="audit-time">${t}</span><span class="audit-action">${a} — <span class="audit-user">${u}</span></span></div>`).join('');
+      return `
+        <div class="section-label">Restricted Chemical Demand Trends</div>
+        <div class="table-section" style="margin-bottom:20px">
+          <table><thead><tr><th>Chemical / SKU</th><th>Classification</th><th>Hazard Level</th><th>Search Trend</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr class="flagged"><td>NCI-4482</td><td>Neuroscience</td><td style="color:#A32D2D;font-weight:600">HIGH</td><td>↑ 34%</td><td><span class="flag-badge">⚑ FLAGGED</span></td></tr>
+            <tr><td>ONC-7731</td><td>Oncology</td><td style="color:#854F0B;font-weight:600">MEDIUM</td><td>↑ 12%</td><td><span class="badge-warn">Monitoring</span></td></tr>
+            <tr class="flagged"><td>INF-1105</td><td>Infectious Diseases</td><td style="color:#A32D2D;font-weight:600">HIGH</td><td>↑ 61%</td><td><span class="flag-badge">⚑ FLAGGED</span></td></tr>
+            <tr><td>CON-2290</td><td>Consumer</td><td style="color:#3B6D11;font-weight:600">LOW</td><td>→ 2%</td><td><span class="badge-ok">Compliant</span></td></tr>
+            <tr><td>NCI-8850</td><td>Neuroscience</td><td style="color:#854F0B;font-weight:600">MEDIUM</td><td>↑ 18%</td><td><span class="badge-warn">Monitoring</span></td></tr>
+          </tbody></table>
+        </div>
+        <div class="section-label">Audit Log — Inventory Changes</div>
+        <div class="audit-log">${auditRows}</div>
+        <div class="section-label">Access Control Note</div>
+        <div class="access-denied"><div class="lock-icon">🔒</div><div><div class="access-denied-title">Access Restricted</div><div class="access-denied-msg">Marketing Analyst role cannot view restricted chemical search trend analytics. Contact your compliance officer for escalation. (FR 45)</div></div></div>
+        <div class="section-label">Chemical Search Trend Volume — Last 6 Months</div>
+        <div class="chart-card" style="margin-bottom:20px">
+          <div class="chart-legend"><span class="legend-item"><span class="legend-swatch" style="background:#E24B4A"></span>High Hazard</span><span class="legend-item"><span class="legend-swatch" style="background:#F7C1C1"></span>Medium Hazard</span></div>
+          ${canvasEl('chemChart')}
+        </div>
+        <div class="footer-actions"><button class="dl-btn">Export Compliance Report</button><button class="dl-btn">Download Audit Log</button></div>`;
+    }
+
+    const chartDefaults = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } };
+
+    function initMarketingCharts() {
+      const rc = document.getElementById('revChart');
+      if (rc) charts.rev = new Chart(rc, { type:'bar', data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'], datasets:[{ type:'line', data:[28,32,30,35,38,41,44,48], borderColor:'#1A1A1A', backgroundColor:'transparent', borderWidth:1.5, pointRadius:3, tension:0.4 },{ type:'bar', data:[26,30,29,34,37,40,43,47], backgroundColor:'#CC0000' }] }, options:{ ...chartDefaults, scales:{ y:{ ticks:{ font:{size:10}, callback:v=>v+'M' }, grid:{color:'rgba(0,0,0,0.05)'} }, x:{ ticks:{font:{size:10}}, grid:{display:false} } } } });
+      const dc = document.getElementById('demoChart');
+      if (dc) charts.demo = new Chart(dc, { type:'bar', data:{ labels:['Aug 1','Aug 14','Aug 28'], datasets:[{label:'Retail Buyers',data:[42,55,60],backgroundColor:'#CC0000'},{label:'Labs',data:[28,30,35],backgroundColor:'#990000'},{label:'Consumers',data:[15,20,22],backgroundColor:'#F5C4B3'}] }, options:{ ...chartDefaults, scales:{ x:{stacked:true,ticks:{font:{size:10}},grid:{display:false}}, y:{stacked:true,ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}} } } });
+    }
+
+    function initExecutiveCharts() {
+      const tc = document.getElementById('execTrend');
+      if (tc) charts.trend = new Chart(tc, { type:'line', data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'], datasets:[{ data:[32,35,33,38,41,44,47,48,50,53], borderColor:'#CC0000', backgroundColor:'rgba(204,0,0,0.08)', borderWidth:2, pointRadius:3, tension:0.4, fill:true },{ data:[9,10,9.5,11,12,13,12.5,12.8,13.5,14], borderColor:'#990000', backgroundColor:'transparent', borderWidth:1.5, borderDash:[4,3], pointRadius:2, tension:0.4 }] }, options:{ ...chartDefaults, scales:{ y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}}, x:{ticks:{font:{size:10}},grid:{display:false}} } } });
+      const dmc = document.getElementById('demandChart');
+      if (dmc) charts.demand = new Chart(dmc, { type:'bar', data:{ labels:['Series 1','Series 2','Series 3'], datasets:[{ type:'line', data:[8,11,10], borderColor:'#1A1A1A', backgroundColor:'transparent', borderWidth:1.5, pointRadius:3, tension:0.4 },{ label:'Europe', data:[7,10,9], backgroundColor:'#CC0000' },{ label:'America', data:[4,6,5], backgroundColor:'#F5C4B3' }] }, options:{ ...chartDefaults, scales:{ y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}}, x:{ticks:{font:{size:10}},grid:{display:false}} } } });
+    }
+
+    function initComplianceCharts() {
+      const cc = document.getElementById('chemChart');
+      if (cc) charts.chem = new Chart(cc, { type:'bar', data:{ labels:['Feb','Mar','Apr','May','Jun','Jul'], datasets:[{ type:'line', data:[12,14,13,18,22,28], borderColor:'#A32D2D', backgroundColor:'transparent', borderWidth:2, borderDash:[4,3], pointRadius:3, tension:0.4 },{ label:'High Hazard', data:[8,9,8,14,18,22], backgroundColor:'#E24B4A' },{ label:'Medium Hazard', data:[4,5,5,4,4,6], backgroundColor:'#F7C1C1' }] }, options:{ ...chartDefaults, scales:{ x:{stacked:true,ticks:{font:{size:10}},grid:{display:false}}, y:{stacked:true,ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}} } } });
+    }
+
+    renderSidebar();
+    renderContent();
+  })();
+  </script>
+
+  <!-- ── WASTE MANAGEMENT SCRIPT (IIFE scoped) ── -->
+  <script>
+  (function() {
+    const wasteRoleConfig = {
+      waste: { label:'Role: Waste Manager', avatar:'WM', nav:['Home','Waste Analytics','Waste Reports','Inquiries'], active:'Home', filters:false },
+      customer: { label:'Role: Customer', avatar:'C', nav:['Home','Products','AI Chatbot'], active:'Products', filters:true },
+      researcher: { label:'Role: Lab Researcher', avatar:'LR', nav:['Home','Products','Safety Reports','Warehouses'], active:'Safety Reports', filters:false }
+    };
+    let wasteCurrentRole = 'waste';
+
+    const wasteDashboardData = {
+      weekly: { labels:['Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7'], chartData:[950,1200,1100,1600,1400,2100,1850], restocked:'1,402', waste:'12,840 kg', warehouses:'08' },
+      monthly: { labels:['Jan','Feb','Mar','Apr','May','Jul','Aug'], chartData:[5400,6200,5800,7100,2000,7282,2], restocked:'5,890', waste:'48,210 kg', warehouses:'12' },
+      yearly: { labels:['2020','2021','2022','2023','2024','2025'], chartData:[22000,25000,21000,28000,31000,29000], restocked:'72,140', waste:'512,000 kg', warehouses:'15' }
+    };
+
+    const wasteCtx = document.getElementById('wasteChartCanvas');
+    let wasteChart = null;
+    if (wasteCtx) {
+      wasteChart = new Chart(wasteCtx.getContext('2d'), {
+        data: { labels: wasteDashboardData.weekly.labels, datasets:[
+          { type:'line', label:'Trend', data: wasteDashboardData.weekly.chartData, borderColor:'#CC0000', borderWidth:2, pointRadius:3, tension:0.4, fill:false },
+          { type:'bar', label:'Volume', data: wasteDashboardData.weekly.chartData, backgroundColor:'rgba(204,0,0,0.2)', borderRadius:4 }
+        ]},
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}}, x:{grid:{display:false}} } }
+      });
+    }
+
+    window.wasteUpdateDashboard = function() {
+      const period = document.getElementById('waste-timelineSelect').value;
+      const data = wasteDashboardData[period];
+      if (wasteChart) {
+        wasteChart.data.labels = data.labels;
+        wasteChart.data.datasets[0].data = data.chartData;
+        wasteChart.data.datasets[1].data = data.chartData;
+        wasteChart.update();
+      }
+      document.getElementById('waste-stat-restocked').innerText = data.restocked;
+      document.getElementById('waste-stat-waste').innerText = data.waste;
+      document.getElementById('waste-stat-warehouses').innerText = data.warehouses;
+    };
+
+    function wasteRenderSidebar() {
+      const r = wasteRoleConfig[wasteCurrentRole];
+      const nav = document.getElementById('waste-navItems');
+      nav.innerHTML = '';
+      r.nav.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'nav-item' + (item === r.active ? ' active' : '');
+        el.textContent = item;
+        el.onclick = () => { document.querySelectorAll('#view-waste .nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); };
+        nav.appendChild(el);
+      });
+      const bottom = document.getElementById('waste-sidebarBottom');
+      bottom.innerHTML = '';
+      const logout = document.createElement('button'); logout.className = 'logoutButton'; logout.textContent = 'Logout';
+      logout.onclick = () => { document.getElementById('waste-logoutModal').style.display = 'block'; };
+      bottom.appendChild(logout);
+      if (r.filters) {
+        const fbtn = document.createElement('button'); fbtn.className = 'filterButton'; fbtn.textContent = 'Filter Panel'; bottom.appendChild(fbtn);
+        [{ label:'Product Classification', id:'waste-filterProduct', opts:['All','Cardiopulmonary','Diabetes','Immunology','Infectious Diseases','Neuroscience','Oncology','Rare Disease','Urology']},
+         { label:'Date Range', id:'waste-filterDate', opts:['All Time','Weekly','Monthly','Yearly']},
+         { label:'Region', id:'waste-filterRegion', opts:['All Regions','North America','Europe']},
+         { label:'Customer Demographic', id:'waste-filterDemo', opts:['All','Retail Buyers','Laboratories','Consumers']}
+        ].forEach(f => {
+          const lbl = document.createElement('div'); lbl.className = 'filter-label'; lbl.textContent = f.label; bottom.appendChild(lbl);
+          const sel = document.createElement('select'); sel.className = 'filter-select'; sel.id = f.id;
+          f.opts.forEach(o => { const opt = document.createElement('option'); opt.textContent = o; sel.appendChild(opt); });
+          bottom.appendChild(sel);
+        });
+        const apply = document.createElement('button'); apply.className = 'applyButton'; apply.textContent = 'Apply Filter'; bottom.appendChild(apply);
+      }
+    }
+
+    function wasteRenderContent() {
+      const el = document.getElementById('waste-mainContent');
+      el.style.display = 'block';
+      if (wasteCurrentRole === 'customer') el.innerHTML = wasteCustomerHTML();
+      else el.innerHTML = wasteResearcherHTML();
+    }
+
+    function wasteCustomerHTML() {
+      return `<div class="customer-top-panel">
+        <div class="customer-left-column">
+          <div class="info-card" style="height:200px;display:flex;align-items:center;justify-content:center;"><span style="color:#6A6864;font-size:12px;">Product image placeholder</span></div>
+          <div class="info-card"><div class="card-title">Name</div><div class="card-value">Hydrochloric Acid</div></div>
+          <div class="info-card"><div class="card-title">Chemical Information</div><div class="card-content">CAS Number: 7647-01-0<br>Formulation: Solution<br>Classification: Hazardous Material<br>Storage: Room temperature</div></div>
+        </div>
+        <div class="customer-right-column">
+          <div class="info-card" style="height:200px;display:flex;align-items:center;justify-content:center;"><span style="color:#6A6864;font-size:12px;">Hazard label placeholder</span></div>
+          <div class="info-card"><div class="card-title">Hazard Handling</div><div class="card-content">Wear gloves, eye protection, and follow containment procedures. Use in well-ventilated areas.</div></div>
+          <div class="info-card"><div class="card-title">Products In Stock</div><div class="card-value">324</div></div>
+          <div class="reportButton-container"><button class="reportButton">Report</button></div>
+        </div>
+      </div>`;
+    }
+
+    function wasteResearcherHTML() {
+      return `<div class="info-card" style="padding:24px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.9px;color:#A8A69E;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:0.5px solid rgba(255,255,255,0.08);">Safety Log</div>
+        <table>
+          <thead><tr><th>Chemical</th><th>Update</th><th>Date</th><th>Product Page</th></tr></thead>
+          <tbody>
+            <tr><td>NCI-4482</td><td>Safety protocol updated for handling high-risk compounds</td><td>2025-10-01</td><td><button class="reportButton" onclick="document.getElementById('waste-productModal').style.display='block'">Here</button></td></tr>
+            <tr><td>ONC-7731</td><td>New storage guidelines implemented</td><td>2025-10-05</td><td><button class="reportButton" onclick="document.getElementById('waste-productModal').style.display='block'">Here</button></td></tr>
+            <tr><td>INF-1105</td><td>Emergency response procedures revised</td><td>2025-10-10</td><td><button class="reportButton" onclick="document.getElementById('waste-productModal').style.display='block'">Here</button></td></tr>
+            <tr><td>CON-2290</td><td>Labeling standards updated</td><td>2025-10-15</td><td><button class="reportButton" onclick="document.getElementById('waste-productModal').style.display='block'">Here</button></td></tr>
+            <tr><td>NCI-8850</td><td>Personal protective equipment requirements enhanced</td><td>2025-10-20</td><td><button class="reportButton" onclick="document.getElementById('waste-productModal').style.display='block'">Here</button></td></tr>
+          </tbody>
+        </table>
+        <button class="reportButton" style="margin-top:16px;">Download Safety Log</button>
+      </div>`;
+    }
+
+    window.wasteSwitch = function(role, btn) {
+      document.querySelectorAll('#view-waste .role-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      wasteCurrentRole = role;
+      document.getElementById('waste-roleLabel').textContent = wasteRoleConfig[role].label;
+      document.getElementById('waste-avatarEl').textContent = wasteRoleConfig[role].avatar;
+      wasteRenderSidebar();
+      const wasteView = document.getElementById('wasteManagerView');
+      const mainContent = document.getElementById('waste-mainContent');
+      if (role === 'waste') {
+        wasteView.style.display = 'block'; mainContent.style.display = 'none'; mainContent.innerHTML = '';
+      } else {
+        wasteView.style.display = 'none'; wasteRenderContent();
+      }
+    };
+
+    document.getElementById('waste-confirmLogout').onclick = () => { document.getElementById('waste-logoutModal').style.display='none'; alert('Logged out!'); };
+    document.getElementById('waste-cancelLogout').onclick = () => { document.getElementById('waste-logoutModal').style.display='none'; };
+    document.getElementById('waste-closeProductModal').onclick = () => { document.getElementById('waste-productModal').style.display='none'; };
+
+    wasteRenderSidebar();
+  })();
+  </script>
+
+  <!-- ── ADMIN SCRIPT (IIFE scoped) ── -->
+  <script>
+  (function() {
+    const adminPageMap = { dashboard:'admin-page-dashboard', inventory:'admin-page-inventory', chatbot:'admin-page-chatbot', usermgmt:'admin-page-usermgmt', placeholder:'admin-page-placeholder' };
+
+    document.querySelectorAll('#view-admin .nav-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('#view-admin .nav-item').forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        const pageKey = item.dataset.page;
+        Object.values(adminPageMap).forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('active'); });
+        const target = document.getElementById(adminPageMap[pageKey]);
+        if (target) target.classList.add('active');
+        if (pageKey === 'placeholder') {
+          document.getElementById('admin-placeholderTitle').textContent = item.textContent;
+          document.getElementById('admin-placeholderEmoji').textContent = item.dataset.emoji || '⚙️';
+          document.getElementById('admin-placeholderName').textContent = item.dataset.msg || item.textContent + ' Coming Soon';
+          document.getElementById('admin-placeholderSub').textContent = item.dataset.sub || 'This tab is under construction';
+        }
+      });
+    });
+
+    // Approval slide-out
+    document.querySelectorAll('#view-admin .ap-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const row = btn.closest('.ap-row');
+        row.classList.add('dismissing');
+        setTimeout(function() {
+          row.classList.add('dismissed');
+          const card = row.closest('.card');
+          const remaining = card.querySelectorAll('.ap-row:not(.dismissed)');
+          if (remaining.length === 0) { const e = card.querySelector('.ap-empty'); if (e) e.style.display = 'block'; }
+          const stat = document.getElementById('admin-pendingStat');
+          const cur = parseInt(stat.textContent); if (cur > 0) stat.textContent = cur - 1;
+        }, 400);
+      });
+    });
+
+    // Inventory filters
+    let adminActiveRisk = 'all', adminActiveCat = 'all';
+    function adminSetupDrop(dropId, toggleId, onPick) {
+      const drop = document.getElementById(dropId), tog = document.getElementById(toggleId);
+      if (!drop || !tog) return;
+      tog.addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.querySelectorAll('#view-admin .dropdown.open').forEach(d => { if(d !== drop) d.classList.remove('open'); });
+        drop.classList.toggle('open');
+      });
+      drop.querySelectorAll('.dd-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+          drop.querySelectorAll('.dd-item').forEach(i => i.classList.remove('sel'));
+          item.classList.add('sel'); drop.classList.remove('open');
+          onPick(item.dataset.val, item.dataset.label, tog);
+        });
+      });
+    }
+    adminSetupDrop('admin-riskDrop', 'admin-riskToggle', function(val, label, tog) {
+      adminActiveRisk = val; tog.innerHTML = (val==='all'?'Filter by Risk':label)+' <span class="dd-arrow">▾</span>';
+      tog.classList.toggle('filtered', val!=='all'); adminApplyFilters(); adminRenderPills();
+    });
+    adminSetupDrop('admin-catDrop', 'admin-catToggle', function(val, label, tog) {
+      adminActiveCat = val; tog.innerHTML = (val==='all'?'Filter by Category':label)+' <span class="dd-arrow">▾</span>';
+      tog.classList.toggle('filtered', val!=='all'); adminApplyFilters(); adminRenderPills();
+    });
+    document.addEventListener('click', function() { document.querySelectorAll('#view-admin .dropdown.open').forEach(d => d.classList.remove('open')); });
+    const adminSearch = document.getElementById('admin-searchInput');
+    if (adminSearch) adminSearch.addEventListener('input', adminApplyFilters);
+
+    function adminApplyFilters() {
+      const q = (document.getElementById('admin-searchInput')||{value:''}).value.toLowerCase(); let vis = 0;
+      document.querySelectorAll('#admin-chemGrid .ccard').forEach(function(c) {
+        const show = (adminActiveRisk==='all'||c.dataset.risk===adminActiveRisk)&&(adminActiveCat==='all'||c.dataset.cat===adminActiveCat)&&(!q||c.textContent.toLowerCase().includes(q));
+        c.style.display = show?'':'none'; if(show) vis++;
+      });
+      const nr = document.getElementById('admin-noResults'); if(nr) nr.style.display = vis===0?'block':'none';
+    }
+
+    function adminRenderPills() {
+      const pc = document.getElementById('admin-pills'); if(!pc) return; pc.innerHTML='';
+    }
+
+    // Chatbot
+    const adminChatArea = document.getElementById('admin-chatArea');
+    const adminChatInput = document.getElementById('admin-chatInput');
+    const adminSendBtn = document.getElementById('admin-sendBtn');
+    const adminBotReplies = [
+      'Understood. Checking the system logs now and flagging any anomalies for your review.',
+      'That request has been processed. All relevant records have been updated in the compliance database.',
+      'I\'ve reviewed the current inventory data. <strong>3 items</strong> require immediate attention.',
+      'Generating the compliance report now. This will include all activity from the past 30 days.',
+      'Risk classification has been updated. All affected users have been notified.',
+    ];
+    let adminReplyIdx = 0;
+
+    function adminAddMsg(html, isUser) {
+      const msg = document.createElement('div'); msg.className='msg'+(isUser?' user':'');
+      const av = isUser?'JP':'AI', avClass = isUser?'usr-av':'bot-av';
+      msg.innerHTML = (isUser?'':'<div class="msg-av '+avClass+'">'+av+'</div>')+'<div class="bubble '+(isUser?'usr-b':'bot-b')+'">'+html+'</div>'+(isUser?'<div class="msg-av '+avClass+'">'+av+'</div>':'');
+      if(adminChatArea) { adminChatArea.appendChild(msg); adminChatArea.scrollTop = adminChatArea.scrollHeight; }
+    }
+
+    function adminSendMessage(text) {
+      text = text.trim(); if(!text) return;
+      if(adminChatInput) adminChatInput.value='';
+      if(adminSendBtn) adminSendBtn.disabled=true;
+      adminAddMsg(text, true);
+      const typing = document.createElement('div'); typing.className='msg'; typing.id='admin-typingMsg';
+      typing.innerHTML='<div class="msg-av bot-av">AI</div><div class="typing-bubble"><span></span><span></span><span></span></div>';
+      if(adminChatArea) { adminChatArea.appendChild(typing); adminChatArea.scrollTop = adminChatArea.scrollHeight; }
+      setTimeout(function() {
+        const t = document.getElementById('admin-typingMsg'); if(t) t.remove();
+        adminAddMsg(adminBotReplies[adminReplyIdx%adminBotReplies.length], false);
+        adminReplyIdx++;
+        if(adminSendBtn) adminSendBtn.disabled=false;
+        if(adminChatInput) adminChatInput.focus();
+      }, 1000+Math.random()*700);
+    }
+
+    if(adminSendBtn) adminSendBtn.addEventListener('click', function(){ adminSendMessage((adminChatInput||{value:''}).value); });
+    if(adminChatInput) adminChatInput.addEventListener('keydown', function(e){ if(e.key==='Enter') adminSendMessage(adminChatInput.value); });
+    document.querySelectorAll('#view-admin .chip').forEach(function(chip){ chip.addEventListener('click', function(){ adminSendMessage(chip.textContent); }); });
+
+    // User Management tabs
+    window.adminSwitchUmTab = function(tab) {
+      const rp = document.getElementById('admin-umRolesPane'), up = document.getElementById('admin-umUsersPane');
+      const tr = document.getElementById('admin-tabRoles'), tu = document.getElementById('admin-tabUsers');
+      if(rp) rp.style.display = tab==='roles'?'block':'none';
+      if(up) up.style.display = tab==='users'?'block':'none';
+      if(tr) tr.classList.toggle('active', tab==='roles');
+      if(tu) tu.classList.toggle('active', tab==='users');
+    };
+
+    window.adminToggleRole = function(id) {
+      const block = document.getElementById('admin-rb-'+id), body = document.getElementById('admin-rbb-'+id);
+      if(!block||!body) return;
+      const isOpen = block.classList.contains('open');
+      block.classList.toggle('open', !isOpen);
+      body.style.display = isOpen?'none':'block';
+    };
+
+    document.querySelectorAll('#view-admin .toggle').forEach(function(tog) {
+      tog.addEventListener('click', function(){ tog.classList.toggle('on'); tog.classList.toggle('off'); });
+    });
+
+    const umSearch = document.getElementById('admin-umSearch');
+    if(umSearch) umSearch.addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      document.querySelectorAll('#admin-umTableBody tr').forEach(function(row){ row.style.display=(!q||row.dataset.name.includes(q)||row.dataset.role.includes(q))?'':'none'; });
+    });
+
+    document.querySelectorAll('#view-admin .um-remove').forEach(function(btn){
+      btn.addEventListener('click', function(){ const row=btn.closest('tr'); row.style.transition='opacity 0.35s'; row.style.opacity='0'; setTimeout(()=>row.remove(),380); });
+    });
+
+    const adminModal = document.getElementById('admin-umModal');
+    const adminAddBtn = document.getElementById('admin-umAddBtn');
+    const adminCancel = document.getElementById('admin-umModalCancel');
+    const adminSave = document.getElementById('admin-umModalSave');
+    if(adminAddBtn) adminAddBtn.addEventListener('click', ()=>{ if(adminModal) adminModal.style.display='flex'; });
+    if(adminCancel) adminCancel.addEventListener('click', ()=>{ if(adminModal) adminModal.style.display='none'; });
+    if(adminModal) adminModal.addEventListener('click', function(e){ if(e.target===adminModal) adminModal.style.display='none'; });
+    if(adminSave) adminSave.addEventListener('click', function(){
+      const name=(document.getElementById('admin-umNewName')||{value:''}).value.trim(); if(!name) return;
+      const email=(document.getElementById('admin-umNewEmail')||{value:''}).value.trim();
+      const dept=(document.getElementById('admin-umNewDept')||{value:''}).value.trim();
+      const role=(document.getElementById('admin-umNewRole')||{value:'user'}).value;
+      const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const roleLabel=role.charAt(0).toUpperCase()+role.slice(1);
+      const roleClass={admin:'ur-admin',laboratory:'ur-lab',compliance:'ur-comp',marketing:'ur-mktg',user:'ur-user'}[role]||'ur-user';
+      const tr=document.createElement('tr'); tr.dataset.name=name.toLowerCase(); tr.dataset.role=role;
+      tr.style.opacity='0'; tr.style.transition='opacity 0.3s';
+      tr.innerHTML=`<td><div class="um-name-cell"><div class="um-avatar">${initials}</div><div><div class="um-name">${name}</div><div class="um-email">${email||'—'}</div></div></div></td><td><span class="um-role-badge ${roleClass}">${roleLabel}</span></td><td>${dept||'—'}</td><td><span class="status-dot s-pending"></span>Pending</td><td><button class="um-action-btn um-remove">Remove</button></td>`;
+      const tbody=document.getElementById('admin-umTableBody'); if(tbody) tbody.appendChild(tr);
+      setTimeout(()=>tr.style.opacity='1',20);
+      tr.querySelector('.um-remove').addEventListener('click',()=>{ tr.style.transition='opacity 0.35s'; tr.style.opacity='0'; setTimeout(()=>tr.remove(),380); });
+      ['admin-umNewName','admin-umNewEmail','admin-umNewDept'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+      if(adminModal) adminModal.style.display='none';
+    });
+
+    // Manage Chemicals button nav
+    document.querySelectorAll('#view-admin .qbtn').forEach(function(btn) {
+      if(btn.textContent.trim()==='Manage Chemicals') {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('#view-admin .nav-item').forEach(n=>n.classList.remove('active'));
+          const invNav = document.querySelector('#view-admin .nav-item[data-page="inventory"]');
+          if(invNav) invNav.classList.add('active');
+          Object.values(adminPageMap).forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+          const invPage=document.getElementById('admin-page-inventory'); if(invPage) invPage.classList.add('active');
+        });
+      }
+    });
+
+    // Delete cards
+    document.querySelectorAll('#view-admin .abt-del').forEach(function(btn){
+      btn.addEventListener('click',function(){ const c=btn.closest('.ccard'); c.classList.add('dissolving'); setTimeout(()=>c.style.display='none',420); });
+    });
+  })();
+  </script>
+
+  <!-- ── RETAIL SCRIPT (IIFE scoped) ── -->
+  <script>
+  (function() {
+    const retailCatClass = { 'Neuroscience':'cat-neuro','Oncology':'cat-onco','Infectious Disease':'cat-infect','Dermatology':'cat-derm','Cardiology':'cat-cardio','Immunology':'cat-immuno' };
+
+    const retailProducts = [
+      {id:1,name:'NeuroStim Gel',sku:'JJ-NS-1045',category:'Neuroscience',components:'Lidocaine, Menthol',packSize:12,unitPrice:38,availability:'Fully Available',hazardous:false,bestseller:false},
+      {id:2,name:'OncoShield Cream',sku:'JJ-ON-2231',category:'Oncology',components:'Zinc Oxide, Dimethicone',packSize:24,unitPrice:52,availability:'Partially Available',hazardous:false,bestseller:true},
+      {id:3,name:'InfecGuard Spray',sku:'JJ-ID-3388',category:'Infectious Disease',components:'Ethanol, Hydrogen Peroxide',packSize:18,unitPrice:41,availability:'Fully Available',hazardous:true,bestseller:false},
+      {id:4,name:'DermaCalm Lotion',sku:'JJ-DE-4412',category:'Dermatology',components:'Aloe Vera, Salicylic Acid',packSize:20,unitPrice:29,availability:'Backordered',hazardous:false,bestseller:false},
+      {id:5,name:'CardioFlow Tablet',sku:'JJ-CA-5501',category:'Cardiology',components:'Aspirin, Clopidogrel',packSize:30,unitPrice:67,availability:'Fully Available',hazardous:false,bestseller:true},
+      {id:6,name:'ImmunoBoost IV',sku:'JJ-IM-6620',category:'Immunology',components:'Immunoglobulin G, Albumin',packSize:6,unitPrice:215,availability:'Partially Available',hazardous:true,bestseller:false},
+      {id:7,name:'NeuroCalm Patch',sku:'JJ-NS-1190',category:'Neuroscience',components:'Fentanyl, Propylene Glycol',packSize:10,unitPrice:88,availability:'Fully Available',hazardous:true,bestseller:true},
+      {id:8,name:'SkinRenew Serum',sku:'JJ-DE-4580',category:'Dermatology',components:'Retinol, Hyaluronic Acid',packSize:15,unitPrice:44,availability:'Fully Available',hazardous:false,bestseller:false},
+      {id:9,name:'OncoClear Capsule',sku:'JJ-ON-2390',category:'Oncology',components:'Methotrexate, Leucovorin',packSize:50,unitPrice:130,availability:'Fully Available',hazardous:true,bestseller:false},
+      {id:10,name:'CardioRhythm Patch',sku:'JJ-CA-5720',category:'Cardiology',components:'Nitroglycerin, Silicone',packSize:14,unitPrice:75,availability:'Partially Available',hazardous:false,bestseller:true},
+    ];
+
+    let retailActiveFilter = 'all', retailBestsellerOnly = false, retailAvailableOnly = false;
+    const retailQuantities = {}; retailProducts.forEach(p => retailQuantities[p.id] = 0);
+    const retailCart = {};
+
+    function retailGetAvailabilityBadge(av) {
+      if (av === 'Fully Available') return `<span class="badge badge-available">Fully Available</span>`;
+      if (av === 'Partially Available') return `<span class="badge badge-partial">Partially Available</span>`;
+      return `<span class="badge badge-backorder">Backordered</span>`;
+    }
+
+    window.retailRender = function() {
+      const search = (document.getElementById('retail-searchInput')||{value:''}).value.toLowerCase();
+      const body = document.getElementById('retail-tableBody'); if(!body) return;
+      body.innerHTML = '';
+      const filtered = retailProducts.filter(p => {
+        const matchCat = retailActiveFilter==='all'||p.category===retailActiveFilter;
+        const matchBS = !retailBestsellerOnly||p.bestseller;
+        const matchAv = !retailAvailableOnly||p.availability==='Fully Available';
+        const matchS = !search||p.name.toLowerCase().includes(search)||p.sku.toLowerCase().includes(search)||p.category.toLowerCase().includes(search);
+        return matchCat&&matchBS&&matchAv&&matchS;
+      });
+      const nr = document.getElementById('retail-noResults'); if(nr) nr.style.display = filtered.length===0?'block':'none';
+      const rc = document.getElementById('retail-resultCount'); if(rc) rc.textContent = `${filtered.length} result${filtered.length!==1?'s':''}`;
+      const cl = document.getElementById('retail-tableCountLabel'); if(cl) cl.innerHTML=`Showing <strong>${filtered.length}</strong> of <strong>${retailProducts.length}</strong> products`;
+
+      filtered.forEach(p => {
+        const qty=retailQuantities[p.id]; const total=qty>0?`$${(qty*p.unitPrice).toLocaleString()}`:'—';
+        const isBackorder=p.availability==='Backordered';
+        const tr=document.createElement('tr'); if(p.bestseller) tr.classList.add('highlight');
+        tr.innerHTML=`<td><div class="product-name">${p.bestseller?'★ ':''}${p.name}${p.bestseller?'<small>Best Seller</small>':''}</div></td><td class="mono">${p.sku}</td><td><span class="category-tag ${retailCatClass[p.category]||''}">${p.category}</span></td><td class="muted" style="font-size:11.5px;">${p.components}</td><td class="mono" style="text-align:center;">${p.packSize}</td><td class="price">$${p.unitPrice}</td><td>${retailGetAvailabilityBadge(p.availability)}</td><td>${p.hazardous?'<span class="hazard-yes">⚠ Yes</span>':'<span class="hazard-no">No</span>'}</td><td><input class="qty-input" type="number" min="0" value="${qty}" ${isBackorder?'disabled':''} onchange="retailUpdateQty(${p.id},this.value)" /></td><td class="total-price" id="retail-total-${p.id}">${total}</td><td><button class="add-btn" ${isBackorder?'disabled':''} onclick="retailAddToCart(${p.id})">+ Add</button></td>`;
+        body.appendChild(tr);
+      });
+      retailUpdateCartTotal();
+    };
+
+    window.retailUpdateQty = function(id, val) {
+      retailQuantities[id] = Math.max(0, parseInt(val)||0);
+      const p = retailProducts.find(x=>x.id===id);
+      const total = retailQuantities[id]>0?`$${(retailQuantities[id]*p.unitPrice).toLocaleString()}`:'—';
+      const el = document.getElementById(`retail-total-${id}`); if(el) el.textContent=total;
+      retailUpdateCartTotal();
+    };
+
+    function retailUpdateCartTotal() {
+      let gt=0; retailProducts.forEach(pr=>{ gt+=(retailQuantities[pr.id]||0)*pr.unitPrice; });
+      const ctEl=document.getElementById('retail-cartTotal'); if(ctEl) ctEl.textContent=`$${gt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    }
+
+    window.retailAddToCart = function(id) {
+      const input=document.querySelector(`input.qty-input[onchange="retailUpdateQty(${id},this.value)"]`);
+      const qty=input?(parseInt(input.value)||1):1;
+      if(input&&parseInt(input.value)===0){input.value=1;retailUpdateQty(id,1);}
+      retailCart[id]=(retailCart[id]||0)+Math.max(1,qty);
+      retailSyncCartBadge();
+      const btn=document.querySelector(`button.add-btn[onclick="retailAddToCart(${id})"]`);
+      if(btn){const orig=btn.textContent;btn.textContent='✓ Added';btn.style.background='#15803D';setTimeout(()=>{btn.textContent=orig;btn.style.background='';},900);}
+    };
+
+    function retailSyncCartBadge() {
+      const total=Object.values(retailCart).reduce((a,b)=>a+b,0);
+      const badge=document.getElementById('retail-cartBadge'); if(badge) badge.textContent=total||'0';
+    }
+
+    window.retailClearCart = function() { Object.keys(retailCart).forEach(k=>delete retailCart[k]); retailSyncCartBadge(); retailRenderCart(); };
+
+    function retailRemoveCartItem(id) { delete retailCart[id]; retailSyncCartBadge(); retailRenderCart(); }
+    function retailChangeCartQty(id, delta) { retailCart[id]=Math.max(1,(retailCart[id]||1)+delta); retailRenderCart(); }
+
+    function retailRenderCart() {
+      const items=Object.entries(retailCart).filter(([id,qty])=>qty>0);
+      const body=document.getElementById('retail-cartItemsBody'); if(!body) return;
+      const empty=document.getElementById('retail-cartEmpty');
+      const countEl=document.getElementById('retail-cartItemCount');
+      const proceedBtn=document.getElementById('retail-proceedBtn');
+      body.innerHTML='';
+      if(empty) empty.style.display=items.length===0?'block':'none';
+      if(countEl) countEl.textContent=`${items.length} item${items.length!==1?'s':''}`;
+      if(proceedBtn) proceedBtn.disabled=items.length===0;
+      let subtotal=0;
+      items.forEach(([id,qty])=>{
+        const p=retailProducts.find(x=>x.id===parseInt(id)); if(!p) return;
+        const lineTotal=p.unitPrice*qty; subtotal+=lineTotal;
+        const row=document.createElement('div'); row.className='cart-item-row';
+        row.innerHTML=`<div class="cart-item-info"><div class="cart-item-name">${p.bestseller?'★ ':''}${p.name}</div><div class="cart-item-sku">${p.sku}</div><div class="cart-item-meta">${p.category} · $${p.unitPrice}/unit</div></div><div class="cart-item-qty"><button class="cart-qty-btn" onclick="retailChangeCartQty(${p.id},-1)">−</button><span class="cart-qty-val">${qty}</span><button class="cart-qty-btn" onclick="retailChangeCartQty(${p.id},1)">+</button></div><div class="cart-item-price">$${lineTotal.toLocaleString()}</div><button class="cart-remove-btn" onclick="retailRemoveCartItem(${p.id})"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l9 9M11 2l-9 9"/></svg></button>`;
+        body.appendChild(row);
+      });
+      const tax=subtotal*0.0825;
+      const ss=document.getElementById('retail-summarySubtotal'); if(ss) ss.textContent=`$${subtotal.toLocaleString('en-US',{minimumFractionDigits:2})}`;
+      const st=document.getElementById('retail-summaryTax'); if(st) st.textContent=`$${tax.toLocaleString('en-US',{minimumFractionDigits:2})}`;
+      const sv=document.getElementById('retail-summaryTotal'); if(sv) sv.textContent=`$${(subtotal+tax).toLocaleString('en-US',{minimumFractionDigits:2})}`;
+      retailRenderCheckoutItems(items, subtotal);
+    }
+
+    function retailRenderCheckoutItems(items, subtotal) {
+      const body=document.getElementById('retail-coItemsBody'); if(!body) return;
+      body.innerHTML='';
+      items.forEach(([id,qty])=>{
+        const p=retailProducts.find(x=>x.id===parseInt(id)); if(!p) return;
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td class="bold">${p.name}</td><td class="mono">${p.sku}</td><td class="mono" style="text-align:center;">${qty}</td><td class="price">$${p.unitPrice}</td><td class="total-price">$${(p.unitPrice*qty).toLocaleString()}</td>`;
+        body.appendChild(tr);
+      });
+      const tax=(subtotal||0)*0.0825;
+      const cc=document.getElementById('retail-coTotalCost'); if(cc) cc.textContent=`$${(subtotal+tax).toLocaleString('en-US',{minimumFractionDigits:2})}`;
+      const ci=document.getElementById('retail-coItemCount'); if(ci) ci.textContent=`${items.length} item${items.length!==1?'s':''}`;
+    }
+
+    window.retailSetDelivery = function(mode) {
+      const dp=document.getElementById('retail-deliveryPickup'), dd=document.getElementById('retail-deliveryDrop');
+      if(dp) dp.classList.toggle('active', mode==='pickup');
+      if(dd) dd.classList.toggle('active', mode==='drop');
+    };
+
+    window.retailShowPage = function(page) {
+      document.querySelectorAll('#view-retail .page').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('#view-retail .nav-item').forEach(n=>n.classList.remove('active'));
+      const pageEl=document.getElementById('retail-page-'+page); if(pageEl) pageEl.classList.add('active');
+      const navEl=document.getElementById('retail-nav-'+page); if(navEl) navEl.classList.add('active');
+      else if(page==='checkout'){const c=document.getElementById('retail-nav-cart');if(c)c.classList.add('active');}
+      const main=document.querySelector('#view-retail .main'); if(main) main.scrollTop=0;
+      if(page==='cart') retailRenderCart();
+      if(page==='checkout'){retailRenderCart();}
+    };
+
+    window.retailSetFilter = function(el, cat) {
+      document.querySelectorAll('#view-retail .filter-chip[data-filter]').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active'); retailActiveFilter=cat; retailRender();
+    };
+    window.retailToggleBestseller = function() {
+      retailBestsellerOnly=!retailBestsellerOnly;
+      const chip=document.getElementById('retail-bestsellerChip'); if(chip) chip.classList.toggle('active',retailBestsellerOnly);
+      retailRender();
+    };
+    window.retailToggleAvailable = function() {
+      retailAvailableOnly=!retailAvailableOnly;
+      const chip=document.getElementById('retail-availableChip'); if(chip) chip.classList.toggle('active',retailAvailableOnly);
+      retailRender();
+    };
+    window.retailChangeCartQty = retailChangeCartQty;
+    window.retailRemoveCartItem = retailRemoveCartItem;
+
+    // Orders
+    const retailOrders = [
+      {id:'ORD-16',date:'03/05/2026',status:'Processing',flagged:'Yes',flagReason:'Approval Threshold',approval:'Awaiting Approval',amount:4250,shipping:'Warehouse Delivery',warehouse:'Dallas J&J Warehouse'},
+      {id:'ORD-17',date:'03/05/2026',status:'Shipped',flagged:'No',flagReason:'None',approval:'N/A',amount:980,shipping:'Pickup',warehouse:'Houston J&J Warehouse'},
+      {id:'ORD-18',date:'03/06/2026',status:'Pending',flagged:'Yes',flagReason:'Sensitive Item',approval:'Awaiting Approval',amount:1720,shipping:'Warehouse Delivery',warehouse:'Austin J&J Warehouse'},
+      {id:'ORD-19',date:'03/06/2026',status:'Backordered',flagged:'Yes',flagReason:'Unusual Quantity',approval:'Processed',amount:3600,shipping:'Pickup',warehouse:'Dallas J&J Warehouse'},
+      {id:'ORD-20',date:'03/08/2026',status:'Delivered',flagged:'No',flagReason:'None',approval:'N/A',amount:2400,shipping:'Warehouse Delivery',warehouse:'San Antonio J&J Warehouse'},
+      {id:'ORD-21',date:'03/10/2026',status:'Shipped',flagged:'No',flagReason:'None',approval:'Processed',amount:3800,shipping:'Warehouse Delivery',warehouse:'Houston J&J Warehouse'},
+      {id:'ORD-22',date:'03/11/2026',status:'Cancelled',flagged:'Yes',flagReason:'Duplicate Order',approval:'N/A',amount:1400,shipping:'Pickup',warehouse:'Dallas J&J Warehouse'},
+    ];
+    const retailOrderStatusBadge = {'Processing':'badge badge-processing','Shipped':'badge badge-shipped','Pending':'badge badge-pending','Backordered':'badge badge-backorder','Delivered':'badge badge-delivered','Cancelled':'badge badge-cancelled'};
+
+    window.retailRenderOrders = function() {
+      const statusF=(document.getElementById('retail-statusFilter')||{value:'all'}).value;
+      const flaggedF=(document.getElementById('retail-flaggedFilter')||{value:'all'}).value;
+      const approvalF=(document.getElementById('retail-approvalFilter')||{value:'all'}).value;
+      const search=(document.getElementById('retail-ordersSearchInput')||{value:''}).value.toLowerCase();
+      const filtered=retailOrders.filter(o=>{
+        const mStatus=statusF==='all'||o.status===statusF;
+        const mFlagged=flaggedF==='all'||o.flagged===flaggedF;
+        const mApproval=approvalF==='all'||o.approval===approvalF;
+        const mSearch=!search||o.id.toLowerCase().includes(search)||o.warehouse.toLowerCase().includes(search)||o.status.toLowerCase().includes(search);
+        return mStatus&&mFlagged&&mApproval&&mSearch;
+      });
+      const body=document.getElementById('retail-ordersTableBody'); if(!body) return;
+      body.innerHTML='';
+      const nr=document.getElementById('retail-ordersNoResults'); if(nr) nr.style.display=filtered.length===0?'block':'none';
+      const oc=document.getElementById('retail-ordersCount'); if(oc) oc.textContent=`${filtered.length} order${filtered.length!==1?'s':''}`;
+      const ocl=document.getElementById('retail-ordersCountLabel'); if(ocl) ocl.innerHTML=`Showing <strong>${filtered.length}</strong> of <strong>${retailOrders.length}</strong> orders`;
+      let totalSpend=0; filtered.forEach(o=>totalSpend+=o.amount);
+      const os=document.getElementById('retail-ordersSpend'); if(os) os.textContent=`$${totalSpend.toLocaleString('en-US',{minimumFractionDigits:2})}`;
+      filtered.forEach(o=>{
+        const needsAction=o.approval==='Awaiting Approval';
+        const tr=document.createElement('tr'); if(needsAction) tr.classList.add('needs-action');
+        const approvalHtml=o.approval==='Awaiting Approval'?'<span class="approval-awaiting">⏳ Awaiting Approval</span>':o.approval==='Processed'?'<span class="approval-processed">✓ Processed</span>':'<span class="approval-na">—</span>';
+        const flagHtml=o.flagged==='Yes'?'<span class="flag-yes">⚑ Yes</span>':'<span class="flag-no">No</span>';
+        tr.innerHTML=`<td><span class="order-num">${o.id}</span></td><td><span class="order-date">${o.date}</span></td><td><span class="${retailOrderStatusBadge[o.status]||'badge'}">${o.status}</span></td><td>${flagHtml}</td><td class="muted" style="font-size:11.5px;">${o.flagReason}</td><td>${approvalHtml}</td><td><span class="order-amount">$${o.amount.toLocaleString()}</span></td><td><span class="shipping-method">${o.shipping}</span></td><td><span class="warehouse">${o.warehouse}</span></td><td><a class="view-link">View</a></td>`;
+        body.appendChild(tr);
+      });
+    };
+
+    retailRender();
+    retailRenderOrders();
+    retailRenderCart();
+  })();
+  </script>
+
+</body>
+</html>
