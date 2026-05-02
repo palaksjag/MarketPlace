@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J&J MarketFlow — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #CC0000; --red-bright: #FF2222; --red-dim: #6B0000;
+      --bg: #1a1a1a; --bg2: #212121; --bg3: #2a2a2a; --bg4: #333;
+      --text: #f0f0f0; --text2: #999; --text3: #555;
+      --border: rgba(255,255,255,0.08);
+      --font: 'Inter', sans-serif; --radius: 8px; --radius-lg: 12px;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5; height: 100vh; overflow: hidden; }
+    .app { display: flex; height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 205px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sb-brand { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+    .jj-logo-img { width: 148px; height: auto; display: block; filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(320deg); }
+    .jj-fallback { display: none; font-family: Georgia, serif; font-size: 19px; font-style: italic; font-weight: 700; color: var(--red); line-height: 1.15; }
+    .jj-sub { font-size: 9px; font-weight: 600; color: var(--red); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 10px; opacity: 0.75; }
+    .nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+    .nav-item { padding: 9px 18px; font-size: 12px; color: var(--text2); cursor: pointer; transition: background 0.12s; }
+    .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .nav-item.active { background: var(--red-dim); color: var(--text); font-weight: 600; border-left: 3px solid var(--red); padding-left: 15px; }
+    .sb-bottom { padding: 14px 16px; border-top: 1px solid var(--border); }
+    .av { width: 30px; height: 30px; border-radius: 50%; background: var(--red-dim); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--red-bright); flex-shrink: 0; }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar { padding: 15px 26px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .page-title { font-size: 19px; font-weight: 600; letter-spacing: -0.4px; }
+    .role-pill { background: var(--red-dim); color: var(--red-bright); font-size: 10px; font-weight: 600; padding: 3px 11px; border-radius: 20px; letter-spacing: 0.4px; }
+    .role-pill-solid { background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+
+    /* ── Pages ── */
+    .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .page.active { display: flex; }
+
+    /* ── DASHBOARD ── */
+    .content { flex: 1; overflow-y: auto; padding: 20px 26px; }
+    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+    .stat-label { font-size: 10px; color: var(--text2); letter-spacing: 0.7px; text-transform: uppercase; font-weight: 500; margin-bottom: 8px; }
+    .stat-val { font-size: 30px; font-weight: 700; color: var(--red-bright); letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .col { display: flex; flex-direction: column; gap: 14px; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+    .card-title { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    .role-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .role-row:last-of-type { border-bottom: none; }
+    .perm { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    .p-high { background: rgba(204,0,0,0.18); color: #FF6666; }
+    .p-med  { background: rgba(200,140,0,0.18); color: #FFB700; }
+    .p-view { background: rgba(90,90,90,0.25); color: #aaa; }
+    .edit-link { font-size: 10px; color: var(--red); cursor: pointer; }
+    .edit-link:hover { color: var(--red-bright); }
+    .alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .alert-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .adot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+    .d-red { background: var(--red-bright); } .d-amb { background: #FFB700; } .d-blu { background: #4499FF; }
+    .alert-title { font-size: 12px; font-weight: 600; }
+    .alert-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+    .alert-cnt { margin-left: auto; font-weight: 700; color: var(--red-bright); font-size: 15px; }
+    .ap-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; overflow: hidden; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease, max-height 0.3s ease 0.25s, padding 0.3s ease 0.25s; max-height: 60px; }
+    .ap-row:last-of-type { border-bottom: none; }
+    .ap-row.dismissing { transform: translateX(-115%); opacity: 0; }
+    .ap-row.dismissed { max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom: none; }
+    .ap-empty { font-size: 11px; color: var(--text3); text-align: center; padding: 14px 0; display: none; }
+    .ap-btns { margin-left: auto; display: flex; gap: 6px; }
+    .ap-btn { border: none; border-radius: 4px; padding: 3px 10px; font-size: 10px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+    .ap-ok { background: rgba(0,160,0,0.18); color: #55DD55; } .ap-ok:hover { background: rgba(0,160,0,0.3); }
+    .ap-no { background: rgba(204,0,0,0.18); color: #FF6666; } .ap-no:hover { background: rgba(204,0,0,0.3); }
+    .qbtn { width: 100%; background: rgba(204,0,0,0.1); color: var(--red-bright); border: 1px solid rgba(204,0,0,0.22); border-radius: var(--radius); padding: 9px 14px; font-size: 11px; font-weight: 500; cursor: pointer; text-align: left; font-family: var(--font); transition: background 0.12s; margin-bottom: 8px; }
+    .qbtn:last-child { margin-bottom: 0; } .qbtn:hover { background: rgba(204,0,0,0.2); }
+    .assign-btn { width: 100%; background: var(--red); color: #fff; border: none; border-radius: var(--radius); padding: 9px 14px; font-size: 11px; font-weight: 600; cursor: pointer; margin-top: 12px; font-family: var(--font); transition: background 0.12s; }
+    .assign-btn:hover { background: #aa0000; }
+
+    /* ── INVENTORY ── */
+    .inv-content { flex: 1; overflow-y: auto; padding: 20px 26px; }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+    .search { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 14px; font-size: 12px; color: var(--text); outline: none; font-family: var(--font); transition: border-color 0.15s; }
+    .search:focus { border-color: rgba(204,0,0,0.5); }
+    .search::placeholder { color: var(--text3); }
+    .add-btn { background: var(--red); border: none; border-radius: var(--radius); padding: 9px 16px; font-size: 11px; font-weight: 600; color: #fff; cursor: pointer; font-family: var(--font); white-space: nowrap; transition: background 0.15s; }
+    .add-btn:hover { background: #aa0000; }
+    .dropdown { position: relative; }
+    .dd-toggle { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 13px; font-size: 11px; font-weight: 500; color: var(--text2); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 7px; font-family: var(--font); transition: border-color 0.15s, color 0.15s; user-select: none; }
+    .dd-toggle:hover { border-color: rgba(255,255,255,0.18); color: var(--text); }
+    .dd-toggle.filtered { border-color: var(--red); color: var(--red-bright); }
+    .dd-arrow { font-size: 8px; transition: transform 0.15s; }
+    .dropdown.open .dd-arrow { transform: rotate(180deg); }
+    .dd-menu { display: none; position: absolute; top: calc(100% + 5px); left: 0; background: var(--bg3); border: 1px solid rgba(255,255,255,0.13); border-radius: var(--radius); padding: 5px 0; min-width: 185px; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.55); }
+    .dropdown.open .dd-menu { display: block; }
+    .dd-item { padding: 8px 14px; font-size: 12px; color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 9px; transition: background 0.1s; }
+    .dd-item:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .dd-item.sel { color: var(--red-bright); font-weight: 600; }
+    .dd-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dd-sep { height: 1px; background: var(--border); margin: 4px 0; }
+    .pills { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+    .pills:empty { margin-bottom: 0; }
+    .pill { background: rgba(204,0,0,0.14); border: 1px solid rgba(204,0,0,0.3); color: var(--red-bright); border-radius: 20px; padding: 3px 11px; font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .pill-x { cursor: pointer; opacity: 0.65; font-size: 14px; line-height: 1; }
+    .pill-x:hover { opacity: 1; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .ccard { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; display: flex; flex-direction: column; transition: border-color 0.15s, opacity 0.4s ease, transform 0.4s ease; }
+    .ccard.dissolving { opacity: 0; transform: scale(0.95); pointer-events: none; }
+    .ccard:hover { border-color: rgba(255,255,255,0.13); }
+    .ccard.b-danger { border-color: rgba(204,0,0,0.28); }
+    .ccard.b-high { border-color: rgba(204,0,0,0.18); }
+    .ccard-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+    .cname { font-size: 13px; font-weight: 600; letter-spacing: -0.15px; }
+    .ccat { font-size: 10px; color: var(--text3); margin-top: 3px; }
+    .rbadge { padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+    .r-low  { background: rgba(0,160,0,0.16); color: #55DD55; }
+    .r-mod  { background: rgba(200,140,0,0.18); color: #FFB700; }
+    .r-high { background: rgba(204,0,0,0.18); color: #FF6666; }
+    .r-res  { background: rgba(130,0,210,0.18); color: #CC88FF; }
+    .desc { font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 12px; flex: 1; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tag { background: var(--bg4); color: var(--text3); font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+    .actions { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 12px; }
+    .abt { flex: 1; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); border-radius: 6px; padding: 6px; font-size: 11px; font-weight: 500; cursor: pointer; text-align: center; font-family: var(--font); transition: background 0.12s; }
+    .abt:hover { background: var(--bg4); color: var(--text); }
+    .abt-del { background: rgba(204,0,0,0.1); color: #FF6666; border-color: rgba(204,0,0,0.2); }
+    .abt-del:hover { background: rgba(204,0,0,0.2); }
+    .abt-pend { background: rgba(130,0,210,0.1); color: #CC88FF; border-color: rgba(130,0,210,0.2); }
+    .no-results { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text3); font-size: 14px; }
+
+    /* ── CHATBOT ── */
+    .chat-area { flex: 1; overflow-y: auto; padding: 22px 26px; display: flex; flex-direction: column; gap: 18px; scroll-behavior: smooth; }
+    .chat-area::-webkit-scrollbar { width: 3px; }
+    .chat-area::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+    .msg { display: flex; gap: 12px; align-items: flex-start; animation: fadeUp 0.25s ease; }
+    .msg.user { flex-direction: row-reverse; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .msg-av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .bot-av { background: var(--red-dim); color: var(--red-bright); }
+    .usr-av { background: #1b2a40; color: #4499FF; }
+    .bubble { max-width: 72%; padding: 13px 16px; font-size: 13px; line-height: 1.65; border-radius: 4px 14px 14px 14px; }
+    .bot-b { background: var(--bg2); border: 1px solid var(--border); }
+    .usr-b { background: var(--red-dim); border: 1px solid rgba(204,0,0,0.35); color: #fff; border-radius: 14px 4px 14px 14px; }
+    .tag-r { display: inline-flex; background: rgba(204,0,0,0.3); color: #FF8888; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    .tag-g { display: inline-flex; background: rgba(0,160,0,0.2); color: #55DD55; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    .typing-bubble { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px 14px 14px 14px; padding: 14px 18px; display: flex; gap: 5px; align-items: center; }
+    .typing-bubble span { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); display: inline-block; animation: bounce 1.2s infinite; }
+    .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); background: var(--text2); } }
+    .chips { display: flex; gap: 8px; padding: 8px 26px 12px; flex-wrap: wrap; background: var(--bg); border-top: 1px solid var(--border); }
+    .chip { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--text2); cursor: pointer; transition: background 0.12s, color 0.12s; }
+    .chip:hover { background: var(--bg4); color: var(--text); }
+    .input-row { padding: 14px 26px; background: var(--bg); border-top: 1px solid var(--border); display: flex; gap: 10px; flex-shrink: 0; }
+    .chat-in { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 16px; font-size: 13px; color: var(--text); outline: none; font-family: var(--font); transition: border-color 0.15s; }
+    .chat-in:focus { border-color: rgba(204,0,0,0.45); }
+    .chat-in::placeholder { color: var(--text3); }
+    .send-btn { background: var(--red); border: none; border-radius: var(--radius); padding: 11px 24px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; font-family: var(--font); transition: background 0.12s; }
+    .send-btn:hover { background: #aa0000; }
+    .send-btn:disabled { background: var(--bg4); color: var(--text3); cursor: not-allowed; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar">
+    <div class="sb-brand">
+      <img class="jj-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Johnson_%26_Johnson_Logo.svg/320px-Johnson_%26_Johnson_Logo.svg.png" alt="Johnson &amp; Johnson" onerror="this.style.display='none';document.getElementById('jj-fallback').style.display='block'" />
+      <div id="jj-fallback" class="jj-fallback">Johnson<br>&amp; Johnson</div>
+      <div class="jj-sub">Admin Dashboard</div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active" data-page="dashboard">Dashboard</div>
+      <div class="nav-item" data-page="placeholder" data-emoji="👥" data-msg="User Management Coming Soon" data-sub="Role assignments and access control will be available here">User Management</div>
+      <div class="nav-item" data-page="inventory">Chemical Inventory</div>
+      <div class="nav-item" data-page="placeholder" data-emoji="⚗️" data-msg="Risk Classification Coming Soon" data-sub="Chemical hazard levels and regulatory tagging will live here">Risk Classification</div>
+      <div class="nav-item" data-page="placeholder" data-emoji="🤖" data-msg="AI Monitoring Coming Soon" data-sub="Track AI decisions, flags, and recommendation logs here">AI Monitoring</div>
+      <div class="nav-item" data-page="placeholder" data-emoji="📋" data-msg="Activity Log Coming Soon" data-sub="Audit trails and admin action history will appear here">Activity Log</div>
+      <div class="nav-item" data-page="chatbot">AI Chatbot</div>
+    </div>
+    <div class="sb-bottom">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="av">JP</div>
+        <div>
+          <div style="font-size:11px;font-weight:600;">Jacob Prats</div>
+          <div style="font-size:9px;color:#555;margin-top:1px;">Admin · ID: ADM-4502</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+
+    <!-- ── PAGE: DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div class="page-title">Overview</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:11px;color:#555;">Last logged in: March 23rd, 2028 · 8:45 AM</span>
+          <span class="role-pill">SYSTEM ADMINISTRATOR</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-row">
+          <div class="stat"><div class="stat-label">Pending Approvals</div><div class="stat-val" id="pendingStat">3</div></div>
+          <div class="stat"><div class="stat-label">AI Alerts</div><div class="stat-val">2</div></div>
+          <div class="stat"><div class="stat-label">Restricted Added Today</div><div class="stat-val">1</div></div>
+          <div class="stat"><div class="stat-label">Active Users</div><div class="stat-val">2</div></div>
+        </div>
+        <div class="two-col">
+          <div class="col">
+            <div class="card">
+              <div class="card-title">User Role Management</div>
+              <div class="role-row"><span>User</span><span class="perm p-view">Limited</span><span class="edit-link">Edit · Delete</span></div>
+              <div class="role-row"><span>Laboratory</span><span class="perm p-high">High</span><span class="edit-link">Edit · Delete</span></div>
+              <div class="role-row"><span>Company</span><span class="perm p-med">Medium</span><span class="edit-link">Edit · Delete</span></div>
+              <div class="role-row"><span>Marketing</span><span class="perm p-view">View Only</span><span class="edit-link">Edit · Delete</span></div>
+              <button class="assign-btn">+ Assign Role</button>
+            </div>
+            <div class="card">
+              <div class="card-title">Chemical Approvals</div>
+              <div class="ap-row"><span>Sulfuric Acid</span><div class="ap-btns"><button class="ap-btn ap-ok">Approve</button><button class="ap-btn ap-no">Reject</button></div></div>
+              <div class="ap-row"><span>Acetone</span><div class="ap-btns"><button class="ap-btn ap-ok">Approve</button><button class="ap-btn ap-no">Reject</button></div></div>
+              <div class="ap-row"><span>Formaldehyde</span><div class="ap-btns"><button class="ap-btn ap-ok">Approve</button><button class="ap-btn ap-no">Reject</button></div></div>
+              <div class="ap-empty">All approvals resolved</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card">
+              <div class="card-title">AI Alerts</div>
+              <div class="alert-row"><div class="adot d-red"></div><div style="flex:1"><div class="alert-title">High Risk Chemical Detected</div><div class="alert-sub">Formaldehyde flagged · just now</div></div><div class="alert-cnt">10</div></div>
+              <div class="alert-row"><div class="adot d-amb"></div><div style="flex:1"><div class="alert-title">Large Quantity Request</div><div class="alert-sub">Unusual bulk order · 2 min ago</div></div><div class="alert-cnt">5</div></div>
+              <div class="alert-row"><div class="adot d-blu"></div><div style="flex:1"><div class="alert-title">Restricted Access Attempt</div><div class="alert-sub">User ADM-302 · 14 min ago</div></div><div class="alert-cnt">1</div></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Quick Actions</div>
+              <button class="qbtn">Review AI Alert</button>
+              <button class="qbtn">Manage Chemicals</button>
+              <button class="qbtn">Update Risk Classifications</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: INVENTORY ── -->
+    <div class="page" id="page-inventory">
+      <div class="topbar">
+        <div class="page-title">Chemical Inventory Management</div>
+        <span style="font-size:11px;color:#555;">Manage all chemicals and products in the system</span>
+      </div>
+      <div class="inv-content">
+        <div class="toolbar">
+          <input class="search" id="searchInput" placeholder="Search by chemical name, category, or CAS number..." />
+          <div class="dropdown" id="riskDrop">
+            <div class="dd-toggle" id="riskToggle">Filter by Risk <span class="dd-arrow">▾</span></div>
+            <div class="dd-menu">
+              <div class="dd-item sel" data-val="all" data-label="">All Risk Levels</div>
+              <div class="dd-sep"></div>
+              <div class="dd-item" data-val="low"        data-label="Risk: Low">       <span class="dot" style="background:#55DD55"></span>Low</div>
+              <div class="dd-item" data-val="moderate"   data-label="Risk: Moderate">  <span class="dot" style="background:#FFB700"></span>Moderate</div>
+              <div class="dd-item" data-val="high"       data-label="Risk: High">      <span class="dot" style="background:#FF6666"></span>High</div>
+              <div class="dd-item" data-val="restricted" data-label="Restricted">      <span class="dot" style="background:#CC88FF"></span>Restricted</div>
+            </div>
+          </div>
+          <div class="dropdown" id="catDrop">
+            <div class="dd-toggle" id="catToggle">Filter by Category <span class="dd-arrow">▾</span></div>
+            <div class="dd-menu">
+              <div class="dd-item sel" data-val="all"               data-label="">All Categories</div>
+              <div class="dd-sep"></div>
+              <div class="dd-item" data-val="pain-relief"           data-label="Pain Relief">Pain Relief</div>
+              <div class="dd-item" data-val="first-aid"             data-label="First Aid">First Aid</div>
+              <div class="dd-item" data-val="lab-chemical"          data-label="Lab Chemical">Lab Chemical</div>
+              <div class="dd-item" data-val="industrial"            data-label="Industrial Chemical">Industrial Chemical</div>
+              <div class="dd-item" data-val="dermatology"           data-label="Dermatology">Dermatology</div>
+              <div class="dd-item" data-val="oncology"              data-label="Oncology">Oncology</div>
+              <div class="dd-item" data-val="neuroscience"          data-label="Neuroscience">Neuroscience</div>
+              <div class="dd-item" data-val="infectious-disease"    data-label="Infectious Disease">Infectious Disease</div>
+            </div>
+          </div>
+          <button class="add-btn">+ Add Chemical</button>
+        </div>
+        <div class="pills" id="pills"></div>
+        <div class="grid" id="chemGrid">
+          <div class="ccard" data-risk="low" data-cat="pain-relief">
+            <div class="ccard-hdr"><div><div class="cname">Tylenol Extra Strength Tablets</div><div class="ccat">Category: Pain Relief</div></div><span class="rbadge r-low">Risk: Low</span></div>
+            <div class="desc">Acetaminophen medication — relieves mild to moderate pain including headaches, muscle aches, and fever. Safe when used as directed.</div>
+            <div class="tags"><span class="tag">OTC</span><span class="tag">Acetaminophen</span><span class="tag">500mg</span></div>
+            <div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div>
+          </div>
+          <div class="ccard" data-risk="low" data-cat="first-aid">
+            <div class="ccard-hdr"><div><div class="cname">Band-Aid Adhesive Bandages</div><div class="ccat">Category: First Aid</div></div><span class="rbadge r-low">Risk: Low</span></div>
+            <div class="desc">Sterile adhesive bandage designed for wound protection and healing. Made with breathable material to promote proper air circulation.</div>
+            <div class="tags"><span class="tag">First Aid</span><span class="tag">Sterile</span><span class="tag">Latex-free</span></div>
+            <div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div>
+          </div>
+          <div class="ccard b-danger" data-risk="restricted" data-cat="lab-chemical">
+            <div class="ccard-hdr"><div><div class="cname">Formaldehyde Solution 37%</div><div class="ccat">Category: Lab Chemical</div></div><span class="rbadge r-res">Restricted</span></div>
+            <div class="desc">Fixative agent used in laboratory tissue preservation. Known carcinogen — requires EHS sign-off and full PPE at all times.</div>
+            <div class="tags"><span class="tag">OSHA</span><span class="tag">EPA</span><span class="tag">EHS Required</span><span class="tag">Carcinogen</span></div>
+            <div class="actions"><button class="abt">Edit</button><button class="abt abt-pend">Pending Approval</button><button class="abt abt-del">Delete</button></div>
+          </div>
+          <div class="ccard b-high" data-risk="high" data-cat="industrial">
+            <div class="ccard-hdr"><div><div class="cname">Sulfuric Acid 98%</div><div class="ccat">Category: Industrial Chemical</div></div><span class="rbadge r-high">Risk: High</span></div>
+            <div class="desc">Strong mineral acid used in manufacturing. Highly corrosive — requires specialized storage and handling per GHS classification standards.</div>
+            <div class="tags"><span class="tag">GHS</span><span class="tag">OSHA</span><span class="tag">Corrosive</span></div>
+            <div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div>
+          </div>
+          <div class="ccard" data-risk="moderate" data-cat="dermatology">
+            <div class="ccard-hdr"><div><div class="cname">Neutrogena Hydro Boost Gel</div><div class="ccat">Category: Dermatology</div></div><span class="rbadge r-mod">Risk: Moderate</span></div>
+            <div class="desc">Hyaluronic acid-based hydrating gel for dry skin. Contains fragrance compounds that may cause sensitization in reactive skin types.</div>
+            <div class="tags"><span class="tag">Dermatology</span><span class="tag">Hyaluronic Acid</span><span class="tag">OTC</span></div>
+            <div class="actions"><button class="abt">Edit</button><button class="abt abt-del">Delete</button></div>
+          </div>
+          <div class="ccard b-danger" data-risk="restricted" data-cat="lab-chemical">
+            <div class="ccard-hdr"><div><div class="cname">Acetone (Reagent Grade)</div><div class="ccat">Category: Lab Chemical</div></div><span class="rbadge r-res">Restricted</span></div>
+            <div class="desc">High-purity solvent used in laboratory extraction and cleaning. Highly flammable — requires ventilated storage and restricted access.</div>
+            <div class="tags"><span class="tag">Flammable</span><span class="tag">GHS</span><span class="tag">Lab Use Only</span></div>
+            <div class="actions"><button class="abt">Edit</button><button class="abt abt-pend">Pending Approval</button><button class="abt abt-del">Delete</button></div>
+          </div>
+          <div class="no-results" id="noResults" style="display:none;">No chemicals match the selected filters.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: CHATBOT ── -->
+    <div class="page" id="page-chatbot">
+      <div class="topbar">
+        <div class="page-title">AI Chatbot</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:11px;color:#555;">Compliance &amp; Risk Management</span>
+          <span class="role-pill-solid">ADMIN MODE</span>
+        </div>
+      </div>
+      <div class="chat-area" id="chatArea">
+        <div class="msg">
+          <div class="msg-av bot-av">AI</div>
+          <div class="bubble bot-b">Hello Jacob! I'm your compliance AI assistant. I can help you review chemical risk classifications, flag unusual purchasing patterns, and manage AI recommendation settings. What would you like to do today?</div>
+        </div>
+        <div class="msg user">
+          <div class="msg-av usr-av">JP</div>
+          <div class="bubble usr-b">Flag all high-risk chemicals added in the last 24 hours.</div>
+        </div>
+        <div class="msg">
+          <div class="msg-av bot-av">AI</div>
+          <div class="bubble bot-b">I found <strong>2 high-risk entries</strong> added in the last 24 hours:<br><br><span class="tag-r">HIGH RISK</span>&nbsp;<strong>Formaldehyde 37%</strong> — awaiting admin approval. Classified as a known carcinogen. EHS sign-off required.<br><br><span class="tag-r">RESTRICTED</span>&nbsp;<strong>Sulfuric Acid 98%</strong> — access attempted by 2 users without correct permissions. Recommend locking access pending review.<br><br>Would you like me to send alert notifications to EHS officers?</div>
+        </div>
+        <div class="msg user">
+          <div class="msg-av usr-av">JP</div>
+          <div class="bubble usr-b">Yes, notify EHS. Also check if any consumers were shown restricted recommendations.</div>
+        </div>
+        <div class="msg">
+          <div class="msg-av bot-av">AI</div>
+          <div class="bubble bot-b"><span class="tag-g">DONE</span>&nbsp;EHS notification sent to 3 officers on record.<br><br>Checking recommendation logs... <strong>No restricted chemicals were surfaced to consumer-role users.</strong> Role-based filters are active and functioning correctly.</div>
+        </div>
+      </div>
+      <div class="chips">
+        <div class="chip">Review pending approvals</div>
+        <div class="chip">Show unusual orders</div>
+        <div class="chip">Update AI restrictions</div>
+        <div class="chip">Generate compliance report</div>
+      </div>
+      <div class="input-row">
+        <input class="chat-in" id="chatInput" placeholder="Ask about chemicals, compliance, user access..." />
+        <button class="send-btn" id="sendBtn">Send</button>
+      </div>
+    </div>
+
+    <!-- ── PAGE: PLACEHOLDER ── -->
+    <div class="page" id="page-placeholder">
+      <div class="topbar">
+        <div class="page-title" id="placeholderTitle">Coming Soon</div>
+      </div>
+      <div class="content" style="display:flex;align-items:center;justify-content:center;flex:1;">
+        <div style="text-align:center;color:var(--text3);">
+          <div style="font-size:52px;margin-bottom:16px;" id="placeholderEmoji">⚙️</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;" id="placeholderName">Coming Soon</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;" id="placeholderSub">This tab is under construction</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Navigation ──
+  var navItems = document.querySelectorAll('.nav-item');
+  var pageMap = { dashboard: 'page-dashboard', inventory: 'page-inventory', chatbot: 'page-chatbot', placeholder: 'page-placeholder' };
+
+  navItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      navItems.forEach(function(n) { n.classList.remove('active'); });
+      item.classList.add('active');
+      var pageKey = item.dataset.page;
+      Object.values(pageMap).forEach(function(id) { document.getElementById(id).classList.remove('active'); });
+      document.getElementById(pageMap[pageKey]).classList.add('active');
+      if (pageKey === 'placeholder') {
+        document.getElementById('placeholderTitle').textContent = item.textContent;
+        document.getElementById('placeholderEmoji').textContent = item.dataset.emoji || '⚙️';
+        document.getElementById('placeholderName').textContent = item.dataset.msg || item.textContent + ' Coming Soon';
+        document.getElementById('placeholderSub').textContent = item.dataset.sub || 'This tab is under construction';
+      }
+      if (pageKey === 'chatbot') { var ca = document.getElementById('chatArea'); ca.scrollTop = ca.scrollHeight; }
+    });
+  });
+
+  // ── Approval slide-out ──
+  document.querySelectorAll('.ap-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var row = btn.closest('.ap-row');
+      row.classList.add('dismissing');
+      setTimeout(function() {
+        row.classList.add('dismissed');
+        var card = row.closest('.card');
+        var remaining = card.querySelectorAll('.ap-row:not(.dismissed)');
+        if (remaining.length === 0) { var e = card.querySelector('.ap-empty'); if (e) e.style.display = 'block'; }
+        var stat = document.getElementById('pendingStat');
+        var cur = parseInt(stat.textContent); if (cur > 0) stat.textContent = cur - 1;
+      }, 400);
+    });
+  });
+
+  // ── Inventory filters ──
+  var activeRisk = 'all', activeCat = 'all';
+  function setupDrop(dropId, toggleId, onPick) {
+    var drop = document.getElementById(dropId), tog = document.getElementById(toggleId);
+    tog.addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.querySelectorAll('.dropdown.open').forEach(function(d) { if (d !== drop) d.classList.remove('open'); });
+      drop.classList.toggle('open');
+    });
+    drop.querySelectorAll('.dd-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        drop.querySelectorAll('.dd-item').forEach(function(i) { i.classList.remove('sel'); });
+        item.classList.add('sel'); drop.classList.remove('open');
+        onPick(item.dataset.val, item.dataset.label, tog);
+      });
+    });
+  }
+  setupDrop('riskDrop', 'riskToggle', function(val, label, tog) {
+    activeRisk = val;
+    tog.innerHTML = (val === 'all' ? 'Filter by Risk' : label) + ' <span class="dd-arrow">▾</span>';
+    tog.classList.toggle('filtered', val !== 'all');
+    applyFilters(); renderPills();
+  });
+  setupDrop('catDrop', 'catToggle', function(val, label, tog) {
+    activeCat = val;
+    tog.innerHTML = (val === 'all' ? 'Filter by Category' : label) + ' <span class="dd-arrow">▾</span>';
+    tog.classList.toggle('filtered', val !== 'all');
+    applyFilters(); renderPills();
+  });
+  document.addEventListener('click', function() { document.querySelectorAll('.dropdown.open').forEach(function(d) { d.classList.remove('open'); }); });
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  function applyFilters() {
+    var q = document.getElementById('searchInput').value.toLowerCase(), vis = 0;
+    document.querySelectorAll('.ccard').forEach(function(c) {
+      var show = (activeRisk === 'all' || c.dataset.risk === activeRisk) && (activeCat === 'all' || c.dataset.cat === activeCat) && (!q || c.textContent.toLowerCase().includes(q));
+      c.style.display = show ? '' : 'none'; if (show) vis++;
+    });
+    document.getElementById('noResults').style.display = vis === 0 ? 'block' : 'none';
+  }
+  function renderPills() {
+    var pc = document.getElementById('pills'); pc.innerHTML = '';
+    if (activeRisk !== 'all') { var ri = document.querySelector('#riskDrop .dd-item[data-val="' + activeRisk + '"]'); makePill(pc, ri ? ri.dataset.label : activeRisk, function() { clearDrop('riskDrop','riskToggle','Filter by Risk'); activeRisk='all'; applyFilters(); renderPills(); }); }
+    if (activeCat !== 'all')  { var ci = document.querySelector('#catDrop .dd-item[data-val="' + activeCat + '"]');  makePill(pc, ci ? ci.dataset.label : activeCat,   function() { clearDrop('catDrop','catToggle','Filter by Category'); activeCat='all'; applyFilters(); renderPills(); }); }
+  }
+  function makePill(container, label, onX) {
+    var p = document.createElement('div'); p.className = 'pill';
+    p.innerHTML = label + ' <span class="pill-x">×</span>';
+    p.querySelector('.pill-x').addEventListener('click', onX); container.appendChild(p);
+  }
+  function clearDrop(dropId, toggleId, defaultLabel) {
+    var tog = document.getElementById(toggleId);
+    tog.innerHTML = defaultLabel + ' <span class="dd-arrow">▾</span>'; tog.classList.remove('filtered');
+    document.querySelectorAll('#' + dropId + ' .dd-item').forEach(function(i) { i.classList.remove('sel'); });
+    document.querySelector('#' + dropId + ' .dd-item[data-val="all"]').classList.add('sel');
+  }
+
+  // ── Chatbot ──
+  var chatArea = document.getElementById('chatArea');
+  var chatInput = document.getElementById('chatInput');
+  var sendBtn = document.getElementById('sendBtn');
+  var botReplies = [
+    'Understood. Checking the system logs now and flagging any anomalies for your review.',
+    'That request has been processed. All relevant records have been updated in the compliance database.',
+    'I\'ve reviewed the current inventory data. <strong>3 items</strong> require immediate attention based on your criteria.',
+    'Generating the compliance report now. This will include all activity from the past 30 days.',
+    'Risk classification has been updated. All affected users have been notified of the permission change.',
+    'I found <strong>2 unusual order patterns</strong> in the last 7 days exceeding normal quantity thresholds. Would you like to flag these for approval?',
+    'AI recommendation filters have been updated. Restricted chemicals will no longer surface for consumer-role accounts.'
+  ];
+  var replyIdx = 0;
+  function scrollChat() { chatArea.scrollTop = chatArea.scrollHeight; }
+  function addMsg(html, isUser) {
+    var msg = document.createElement('div'); msg.className = 'msg' + (isUser ? ' user' : '');
+    var av = isUser ? 'JP' : 'AI', avClass = isUser ? 'usr-av' : 'bot-av';
+    msg.innerHTML = (isUser ? '' : '<div class="msg-av ' + avClass + '">' + av + '</div>') +
+      '<div class="bubble ' + (isUser ? 'usr-b' : 'bot-b') + '">' + html + '</div>' +
+      (isUser ? '<div class="msg-av ' + avClass + '">' + av + '</div>' : '');
+    chatArea.appendChild(msg); scrollChat();
+  }
+  function showTyping() {
+    var m = document.createElement('div'); m.className = 'msg'; m.id = 'typingMsg';
+    m.innerHTML = '<div class="msg-av bot-av">AI</div><div class="typing-bubble"><span></span><span></span><span></span></div>';
+    chatArea.appendChild(m); scrollChat();
+  }
+  function removeTyping() { var t = document.getElementById('typingMsg'); if (t) t.remove(); }
+  function sendMessage(text) {
+    text = text.trim(); if (!text) return;
+    chatInput.value = ''; sendBtn.disabled = true;
+    addMsg(text, true); showTyping();
+    setTimeout(function() {
+      removeTyping();
+      addMsg(botReplies[replyIdx % botReplies.length], false);
+      replyIdx++; sendBtn.disabled = false; chatInput.focus();
+    }, 1000 + Math.random() * 700);
+  }
+  sendBtn.addEventListener('click', function() { sendMessage(chatInput.value); });
+  chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendMessage(chatInput.value); });
+  document.querySelectorAll('.chip').forEach(function(chip) { chip.addEventListener('click', function() { sendMessage(chip.textContent); }); });
+  // ── Inventory delete ──
+  document.querySelectorAll('.abt-del').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var card = btn.closest('.ccard');
+      card.classList.add('dissolving');
+      setTimeout(function() { card.style.display = 'none'; }, 420);
+    });
+  });
+</script>
+</body>
+</html>
