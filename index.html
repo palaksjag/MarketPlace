@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang = "en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>J&J Waste Management - Dark</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset = "UTF-8" />
+  <meta name = "viewport" content = "width = device-width, initial-scale = 1.0" />
+  <title> J&J Waste Management - Dark</title>
+  <link href = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel = "stylesheet" />
+  <script src = "https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     
   :root {
@@ -63,10 +63,133 @@
   .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
   .nav-item.active { color: var(--text-primary); font-weight: 600; background: var(--red-light); border-left: 3px solid var(--red); }
 
+  .logoutButton {
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-family: var(--font);
+      background: transparent;
+      border: 0.5px solid var(--border-med);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      transition: background 0.12s;
+    }
+    .logoutButton:hover { background: var(--bg-secondary); }
+    .filterButton {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: var(--font);
+      background: var(--red);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: #fff;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .filter-label {
+      font-size: 10px;
+      color: var(--red);
+      font-weight: 600;
+      margin-bottom: 3px;
+      margin-top: 8px;
+    }
+    .filter-select {
+      width: 100%;
+      padding: 5px 7px;
+      font-size: 11px;
+      font-family: var(--font);
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+    }
+    .applyButton{
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-family: var(--font);
+      background: transparent;
+      border: 0.5px solid var(--border-med);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      transition: background 0.12s;
+    }
+    .applyButton:hover { background: var(--bg-secondary); }
+
   .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-  
-  .topbar { padding: 16px 24px; background: var(--bg-primary); border-bottom: 1px solid var(--border-light); }
+  .topbar {
+      padding: 12px 22px;
+      border-bottom: 0.5px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-primary);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
   .page-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+
+  .role-tabs {
+    display: flex;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .role-tab {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-family: var(--font);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: background 0.12s, color 0.12s;
+  }
+
+  /* Vertical divider between buttons */
+  .role-tab:not(:last-child) { 
+    border-right: 0.5px solid var(--border-light); 
+  }
+
+  .role-tab.active { 
+    background: var(--red); 
+    color: #fff; 
+    font-weight: 500; 
+  }
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border: 0.5px solid var(--border-light);
+    border-radius: 20px;
+    font-size: 11px;
+  }
+
+  .avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--red-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--red);
+  }
 
   /* Filter */
   .filter-section { 
@@ -95,10 +218,89 @@
     gap: 20px; 
     padding: 24px; 
   }
+
+  #mainContent {
+    display: none;
+    width: 100%;
+    padding: 24px;
+  }
+
+  .customer-top-panel {
+    display: grid;
+    grid-template-columns: 1.1fr 0.95fr;
+    gap: 20px;
+    padding: 24px;
+  }
+  .customer-left-column,
+  .customer-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .info-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    min-height: 88px;
+  }
+  .customer-product-image,
+  .hazard-label-image {
+    width: 600px;
+    height: 300px;
+    min-height: unset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .customer-product-image img,
+  .hazard-label-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+  }
+  .placeholder-text {
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-align: center;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .card-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .card-content {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .reportButton-container {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .reportButton {
+    background: var(--red);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 13px;
+    cursor: pointer;
+  }
     
   .chart-card { 
     background: var(--bg-primary); 
-    padding: 24px; /* Increased slightly for bars */
+    padding: 24px; 
     border-radius: var(--radius-lg); 
     border: 1px solid var(--border-light); 
     height: 360px; 
@@ -123,6 +325,53 @@
     margin-top: 4px; 
     font-family: var(--mono); 
   }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+  }
+
+  .modal-content {
+    background-color: var(--bg-primary);
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    width: 300px;
+    text-align: center;
+    color: var(--text-primary);
+  }
+
+  .modal-content p {
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+
+  .modal-content button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 14px;
+  }
+
+  #confirmLogout {
+    background-color: var(--red);
+    color: #fff;
+  }
+
+  #cancelLogout {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+  }
   </style>
 </head>
 <body>
@@ -132,19 +381,34 @@
       <img src="Johnson & Johnson Logo.png" alt="Logo" class="logo-img">
       <div class="brand-title">Waste Management</div>
     </div>
-    <div class="nav-items">
-      <div class="nav-item">Home</div>
-      <div class="nav-item active">Analytics</div>
+    <div class="nav-items" id = "navItems">
+      <div class="nav-item active">Home</div>
+      <div class="nav-item">Analytics</div>
       <div class="nav-item">Reports</div>
       <div class="nav-item">Inquiries</div>
     </div>
+
+    <div id="sidebarBottom" style="padding: 16px;"></div>
   </div>
 
   <div class="main">
     <div class="topbar">
-      <div class="page-title">Overview</div>
+      <div class="topbar-left">
+        <div class="page-title">Overview</div>
+        <!-- This container is likely what you were missing -->
+        <div class="role-tabs">
+          <button class="role-tab active" onclick="switchRole('waste', this)">Waste Manager</button>
+          <button class="role-tab" onclick="switchRole('customer', this)">Customer</button>
+          <button class="role-tab" onclick="switchRole('researcher', this)">Lab Researcher</button>
+        </div>
+      </div>
+      <div class="user-badge">
+        <div class="avatar" id="avatarEl">MA</div>
+        <span id="roleLabel">Role: Waste Manager</span>
+      </div>
     </div>
 
+    <div id="wasteManagerView">
     <div class="filter-section">
         <div class="filter-group">
             <label>Timeline</label>
@@ -172,7 +436,7 @@
         </div>
       </div>
 
-      </html><div class="stats-column">
+      <div class="stats-column">
         <div class="stat-box">
             <div class="stat-label">Products Restocked</div>
             <div class="stat-value" id="stat-restocked">1,402</div>
@@ -185,12 +449,287 @@
             <div class="stat-label">Warehouses</div>
             <div class="stat-value" id="stat-warehouses">08</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainContent">
+  </div>
+
+  <!-- Logout Modal -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-content">
+      <p>Log out?</p>
+      <button id="confirmLogout">Yes</button>
+      <button id="cancelLogout">No</button>
+    </div>
+  </div>
+
+  <!-- Product Page Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <p>Product Page</p>
+      <button id="closeProductModal">OK</button>
     </div>
   </div>
 
     <script>
         const ctx = document.getElementById('wasteChart').getContext('2d');
-        
+        let currentRole = 'waste';
+        let charts = {};
+
+        const roleConfig = {
+          waste: {
+            label: 'Role: Waste Manager',
+            avatar: 'WM',
+            nav: ['Home', 'Waste Analytics', 'Waste Reports', 'Inquiries'],
+            active: 'Home',
+            filters: false
+          },
+          customer: {
+            label: 'Role: Customer',
+            avatar: 'C',
+            nav: ['Home', 'Products', 'AI Chatbot'],
+            active: 'Products',
+            filters: true
+          },
+          researcher: {
+            label: 'Role: Lab Researcher',
+            avatar: 'LR',
+            nav: ['Home', 'Products', 'Safety Reports', 'Warehouses'],
+            active: 'Safety Reports',
+            filters: false
+          }
+        };
+
+        function canvasEl(id) {
+          return `<canvas id="${id}"></canvas>`;
+        }
+
+        function switchRole(role, btn) {
+          document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+
+          currentRole = role;
+          
+          const config = roleConfig[role];
+          document.getElementById('roleLabel').textContent = config.label;
+          document.getElementById('avatarEl').textContent = config.avatar;
+
+          const wasteView = document.getElementById('wasteManagerView');
+          const mainContent = document.getElementById('mainContent');
+          renderSidebar();
+
+          if (currentRole === 'waste') {
+            wasteView.style.display = 'block';
+            mainContent.style.display = 'none';
+            mainContent.innerHTML = '';
+          } else {
+            wasteView.style.display = 'none';
+            mainContent.style.display = 'block';
+            renderContent();
+          }
+        }
+
+        function renderSidebar() {
+          const r = roleConfig[currentRole];
+
+          // Navigation
+          const nav = document.getElementById('navItems');
+          nav.innerHTML = '';
+          r.nav.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'nav-item' + (item === r.active ? ' active' : '');
+            el.textContent = item;
+            el.onclick = () => {
+              document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+              el.classList.add('active');
+            };
+            nav.appendChild(el);
+          });
+
+          // Bottom
+          const bottom = document.getElementById('sidebarBottom');
+          bottom.innerHTML = '';
+
+          const logout = document.createElement('button');
+          logout.className = 'logoutButton';
+          logout.textContent = 'Logout';
+          logout.onclick = () => {
+            document.getElementById('logoutModal').style.display = 'block';
+          };
+          bottom.appendChild(logout);
+
+          if (r.filters) {
+            const fbtn = document.createElement('button');
+            fbtn.className = 'filterButton';
+            fbtn.textContent = 'Filter Panel';
+            bottom.appendChild(fbtn);
+
+            const filterDefs = [
+              { label: 'Product Classification', id: 'filterProduct', opts: ['All', 'Cardiopulmonary', 'Diabetes', 'Immunology', 'Infectious Diseases', 'Neuroscience', 'Oncology', 'Rare Disease', 'Urology']},
+              { label: 'Date Range', id: 'filterDate', opts: ['All Time', 'Weekly', 'Monthly', 'Yearly']},
+              { label: 'Region', id: 'filterRegion', opts: ['All Regions', 'North America', 'Europe']},
+              { label: 'Customer Demographic', id: 'filterDemo', opts: ['All', 'Retail Buyers', 'Labratories', 'Consumers']}
+            ];
+
+            filterDefs.forEach(f => {
+              const lbl = document.createElement('div');
+              lbl.className = 'filter-label';
+              lbl.textContent = f.label;
+              bottom.appendChild(lbl);
+
+              const sel = document.createElement('select');
+              sel.className = 'filter-select';
+              sel.id = f.id;
+              f.opts.forEach(o => {
+                const opt = document.createElement('option');
+                opt.textContent = o;
+                sel.appendChild(opt);
+              });
+              bottom.appendChild(sel);
+            });
+
+            const apply = document.createElement('button');
+            apply.className = 'applyButton';
+            apply.textContent = 'Apply Filter';
+            bottom.appendChild(apply);
+          }
+        }
+
+        /* Content Rendering */
+        function renderContent() {
+          const el = document.getElementById('mainContent');
+          el.style.display = 'block';
+
+          if (currentRole === 'waste') el.innerHTML = wasteHTML();
+          else if (currentRole === 'customer') el.innerHTML = customerHTML();
+          else el.innerHTML = researcherHTML();
+        }
+
+          /* Customer Page */
+          function customerHTML() {
+            return `
+              <div class="customer-top-panel">
+                <div class="customer-left-column">
+                  <div class="info-card customer-product-image">
+                    <img src="HCl.jpg" alt="HCl Product Image" />
+                  </div>
+                  <div class="info-card customer-name">
+                    <div class="card-title">Name</div>
+                    <div class="card-value">Hydrochloric Acid</div>
+                  </div>
+                  <div class="info-card customer-chemical-info">
+                    <div class="card-title">Chemical Information</div>
+                    <div class="card-content">CAS Number: 7647-01-0<br />Formulation: Solution<br />Classification: Hazardous Material<br />Storage: Room temperature</div>
+                  </div>
+                </div>
+                <div class="customer-right-column">
+                  <div class="info-card hazard-label-image">
+                    <img src="Hazard Label.jpg" alt="Hazard Label Image" />
+                  </div>
+                  <div class="info-card hazard-handling">
+                    <div class="card-title">Hazard Handling</div>
+                    <div class="card-content">Wear gloves, eye protection, and follow containment procedures. Use in well-ventilated areas and keep away from incompatible materials.</div>
+                  </div>
+                  <div class="info-card stock-count">
+                    <div class="card-title">Products In Stock</div>
+                    <div class="card-value">324</div>
+                  </div>
+                  <div class="reportButton-container">
+                    <button class="reportButton">Report</button>
+                  </div>
+                </div>
+              </div>
+
+              </div>`;
+          }
+
+          /* Researcher Page */
+          function researcherHTML() {
+            return `
+              <div class="info-card" style="padding: 24px;">
+                <div class="section-label">Safety Log</div>
+                <div class="table-section" style="margin-bottom:20px">
+                  <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                    <thead>
+                      <tr>
+                        <th style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Chemical</th>
+                        <th style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Update</th>
+                        <th style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Date</th>
+                        <th style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Product Page</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">NCI-4482</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Safety protocol updated for handling high-risk compounds</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-10-01</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">ONC-7731</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">New storage guidelines implemented</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-10-05</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">INF-1105</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Emergency response procedures revised</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-10-10</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">CON-2290</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Labeling standards updated</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-10-15</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">NCI-8850</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Personal protective equipment requirements enhanced</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-10-20</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">NEU-1234</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Disposal methods reviewed and approved</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-10-25</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">CAR-5678</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Training session completed for lab staff</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-10-30</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">IMM-9012</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Risk assessment updated</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-11-02</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">INF-3456</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Compliance audit passed</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-11-05</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">RAR-7890</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">Safety data sheet revised</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;">2025-11-10</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-light); text-align: center;"><button class="reportButton" onclick="document.getElementById('productModal').style.display = 'block';">Here</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="report-button-container">
+                  <button class="reportButton">Download Safety Log</button>
+                </div>
+              </div>`;
+          }
+
         // 1. Map Stuff
         const dashboardData = {
             weekly: {
@@ -269,6 +808,19 @@
 
         // Need to make sure to add different pages and top buttons
         }
+
+      renderSidebar();
+
+      document.getElementById('confirmLogout').onclick = () => {
+        document.getElementById('logoutModal').style.display = 'none';
+        alert('Logged out!');
+      };
+      document.getElementById('cancelLogout').onclick = () => {
+        document.getElementById('logoutModal').style.display = 'none';
+      };
+      document.getElementById('closeProductModal').onclick = () => {
+        document.getElementById('productModal').style.display = 'none';
+      };
     </script>
 </body>
 </div>
