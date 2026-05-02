@@ -50,7 +50,7 @@
     
   .sidebar-brand { padding: 24px 16px; border-bottom: 1px solid var(--border-light); }
   .logo-img { width: 130px; height: auto; margin-bottom: 8px; display: block; filter: brightness(1.2); }
-  .brand-title { font-size: 11px; font-weight: 600; color: var(--red); letter-spacing: 0.5px; text-transform: uppercase; }
+  .brand-title { font-size: 17px; font-weight: 600; color: var(--red); letter-spacing: 0.5px; text-transform: uppercase; }
 
   .nav-items { flex: 1; padding: 10px 0; }
   .nav-item { 
@@ -379,7 +379,7 @@
   <div class="sidebar">
     <div class="sidebar-brand">
       <img src="Johnson & Johnson Logo.png" alt="Logo" class="logo-img">
-      <div class="brand-title">Waste Management</div>
+      <div class="brand-title">MarketFlow</div>
     </div>
     <div class="nav-items" id = "navItems">
       <div class="nav-item active">Home</div>
@@ -395,7 +395,6 @@
     <div class="topbar">
       <div class="topbar-left">
         <div class="page-title">Overview</div>
-        <!-- This container is likely what you were missing -->
         <div class="role-tabs">
           <button class="role-tab active" onclick="switchRole('waste', this)">Waste Manager</button>
           <button class="role-tab" onclick="switchRole('customer', this)">Customer</button>
@@ -456,7 +455,6 @@
   <div id="mainContent">
   </div>
 
-  <!-- Logout Modal -->
   <div id="logoutModal" class="modal">
     <div class="modal-content">
       <p>Log out?</p>
@@ -465,7 +463,6 @@
     </div>
   </div>
 
-  <!-- Product Page Modal -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <p>Product Page</p>
