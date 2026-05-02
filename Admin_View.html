@@ -20,8 +20,6 @@
     /* ── Sidebar ── */
     .sidebar { width: 205px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
     .sb-brand { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
-    .jj-logo-img { width: 148px; height: auto; display: block; filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(320deg); }
-    .jj-fallback { display: none; font-family: Georgia, serif; font-size: 19px; font-style: italic; font-weight: 700; color: var(--red); line-height: 1.15; }
     .jj-sub { font-size: 9px; font-weight: 600; color: var(--red); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 10px; opacity: 0.75; }
     .nav { flex: 1; padding: 10px 0; overflow-y: auto; }
     .nav-item { padding: 9px 18px; font-size: 12px; color: var(--text2); cursor: pointer; transition: background 0.12s; }
@@ -131,7 +129,65 @@
     .abt-pend { background: rgba(130,0,210,0.1); color: #CC88FF; border-color: rgba(130,0,210,0.2); }
     .no-results { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text3); font-size: 14px; }
 
-    /* ── CHATBOT ── */
+    /* ── USER MANAGEMENT ── */
+    .um-content { flex: 1; overflow-y: auto; padding: 20px 26px; }
+    .um-tab { background: transparent; border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; font-family: var(--font); transition: background 0.12s, color 0.12s; }
+    .um-tab.active { background: var(--red-dim); color: var(--text); font-weight: 600; }
+    .um-toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+    .um-search { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 14px; font-size: 12px; color: var(--text); outline: none; font-family: var(--font); }
+    .um-search::placeholder { color: var(--text3); }
+    .um-add-btn { background: var(--red); border: none; border-radius: var(--radius); padding: 9px 16px; font-size: 11px; font-weight: 600; color: #fff; cursor: pointer; font-family: var(--font); white-space: nowrap; }
+    .um-add-btn:hover { background: #aa0000; }
+    .role-block { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; }
+    .role-block-hdr { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; cursor: pointer; transition: background 0.12s; }
+    .role-block-hdr:hover { background: rgba(255,255,255,0.03); }
+    .rb-arrow { font-size: 10px; color: var(--text3); transition: transform 0.2s; }
+    .role-block.open .rb-arrow { transform: rotate(180deg); }
+    .role-block-body { padding: 0 18px 16px; border-top: 1px solid var(--border); }
+    .perm-section-title { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.9px; text-transform: uppercase; padding: 12px 0 10px; }
+    .perm-grid { display: flex; flex-direction: column; }
+    .perm-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); }
+    .perm-row:last-child { border-bottom: none; }
+    .toggle { width: 36px; height: 20px; border-radius: 20px; cursor: pointer; position: relative; flex-shrink: 0; transition: background 0.2s; }
+    .toggle.on  { background: var(--red); }
+    .toggle.off { background: var(--bg4); }
+    .toggle::after { content:''; position:absolute; width:14px; height:14px; border-radius:50%; background:#fff; top:3px; transition: left 0.2s; }
+    .toggle.on::after  { left: 19px; }
+    .toggle.off::after { left: 3px; }
+    .um-table { width: 100%; border-collapse: collapse; }
+    .um-table thead tr { border-bottom: 1px solid var(--border); }
+    .um-table th { text-align: left; font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.8px; text-transform: uppercase; padding: 0 14px 10px; }
+    .um-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+    .um-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .um-table tbody tr:last-child { border-bottom: none; }
+    .um-table td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
+    .um-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--red-dim); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--red-bright); margin-right: 10px; flex-shrink: 0; }
+    .um-name-cell { display: flex; align-items: center; }
+    .um-name { font-weight: 500; }
+    .um-email { font-size: 10px; color: var(--text3); margin-top: 2px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .s-active { background: #55DD55; } .s-inactive { background: var(--text3); } .s-pending { background: #FFB700; }
+    .um-role-badge { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    .ur-admin { background: rgba(204,0,0,0.18); color: #FF6666; }
+    .ur-lab   { background: rgba(68,153,255,0.15); color: #66AAFF; }
+    .ur-user  { background: rgba(90,90,90,0.25); color: #aaa; }
+    .ur-mktg  { background: rgba(130,0,210,0.18); color: #CC88FF; }
+    .ur-comp  { background: rgba(200,140,0,0.18); color: #FFB700; }
+    .um-action-btn { border: none; border-radius: 5px; padding: 4px 10px; font-size: 10px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+    .um-remove { background: rgba(204,0,0,0.12); color: #FF6666; }
+    .um-remove:hover { background: rgba(204,0,0,0.25); }
+    .um-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1000; align-items:center; justify-content:center; }
+    .um-modal { background:#222; border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:28px 32px; width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+    .um-modal h3 { font-size:15px; font-weight:600; margin-bottom:20px; }
+    .um-field { margin-bottom:14px; }
+    .um-field label { display:block; font-size:10px; font-weight:600; color:var(--text3); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:6px; }
+    .um-field input, .um-field select { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:9px 12px; font-size:12px; color:var(--text); font-family:var(--font); outline:none; }
+    .um-field select option { background:var(--bg3); }
+    .um-modal-btns { display:flex; gap:10px; margin-top:22px; }
+    .um-modal-cancel { flex:1; background:var(--bg3); border:1px solid var(--border); color:var(--text2); border-radius:var(--radius); padding:9px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); }
+    .um-modal-save { flex:1; background:var(--red); border:none; color:#fff; border-radius:var(--radius); padding:9px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); }
+    .um-modal-save:hover { background:#aa0000; }
+    /* ── USER MANAGEMENT END ── */
     .chat-area { flex: 1; overflow-y: auto; padding: 22px 26px; display: flex; flex-direction: column; gap: 18px; scroll-behavior: smooth; }
     .chat-area::-webkit-scrollbar { width: 3px; }
     .chat-area::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
@@ -169,13 +225,12 @@
   <!-- ── SIDEBAR ── -->
   <div class="sidebar">
     <div class="sb-brand">
-      <img class="jj-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Johnson_%26_Johnson_Logo.svg/320px-Johnson_%26_Johnson_Logo.svg.png" alt="Johnson &amp; Johnson" onerror="this.style.display='none';document.getElementById('jj-fallback').style.display='block'" />
-      <div id="jj-fallback" class="jj-fallback">Johnson<br>&amp; Johnson</div>
+      <div style="font-family:Georgia,serif;font-size:20px;font-style:italic;font-weight:700;color:#CC0000;line-height:1.15;letter-spacing:-0.3px;">J &amp; J<span style="display:block;">MarketFlow</span></div>
       <div class="jj-sub">Admin Dashboard</div>
     </div>
     <div class="nav">
       <div class="nav-item active" data-page="dashboard">Dashboard</div>
-      <div class="nav-item" data-page="placeholder" data-emoji="👥" data-msg="User Management Coming Soon" data-sub="Role assignments and access control will be available here">User Management</div>
+      <div class="nav-item" data-page="usermgmt">User Management</div>
       <div class="nav-item" data-page="inventory">Chemical Inventory</div>
       <div class="nav-item" data-page="placeholder" data-emoji="⚗️" data-msg="Risk Classification Coming Soon" data-sub="Chemical hazard levels and regulatory tagging will live here">Risk Classification</div>
       <div class="nav-item" data-page="placeholder" data-emoji="🤖" data-msg="AI Monitoring Coming Soon" data-sub="Track AI decisions, flags, and recommendation logs here">AI Monitoring</div>
@@ -328,6 +383,222 @@
       </div>
     </div>
 
+    <!-- ── PAGE: USER MANAGEMENT ── -->
+    <div class="page" id="page-usermgmt">
+      <div class="topbar">
+        <div class="page-title">User Management</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:11px;color:#555;">Manage roles, permissions and access control</span>
+          <span class="role-pill">SYSTEM ADMINISTRATOR</span>
+        </div>
+      </div>
+      <div class="um-content">
+
+        <!-- Tab switcher -->
+        <div style="display:flex;gap:0;margin-bottom:20px;background:var(--bg3);border-radius:var(--radius);padding:3px;width:fit-content;border:1px solid var(--border);">
+          <button class="um-tab active" id="tabRoles" onclick="switchUmTab('roles')">Role Permissions</button>
+          <button class="um-tab" id="tabUsers" onclick="switchUmTab('users')">Users</button>
+        </div>
+
+        <!-- ── ROLES TAB ── -->
+        <div id="umRolesPane">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:16px;">Click a role to expand and edit its permissions.</div>
+          <div id="rolesAccordion">
+
+            <!-- Admin -->
+            <div class="role-block" id="rb-admin">
+              <div class="role-block-hdr" onclick="toggleRole('admin')">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span class="um-role-badge ur-admin">Admin</span>
+                  <span style="font-size:12px;font-weight:500;">System Administrator</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:10px;color:var(--text3);">2 users</span>
+                  <span class="rb-arrow">▾</span>
+                </div>
+              </div>
+              <div class="role-block-body" id="rbb-admin">
+                <div class="perm-section-title">Access &amp; Visibility</div>
+                <div class="perm-grid">
+                  <div class="perm-row"><span>View all chemical inventory</span><div class="toggle on" data-role="admin" data-perm="view-inventory"></div></div>
+                  <div class="perm-row"><span>Add / edit chemicals</span><div class="toggle on" data-role="admin" data-perm="edit-chemicals"></div></div>
+                  <div class="perm-row"><span>Approve chemical entries</span><div class="toggle on" data-role="admin" data-perm="approve-chemicals"></div></div>
+                  <div class="perm-row"><span>View restricted chemicals</span><div class="toggle on" data-role="admin" data-perm="view-restricted"></div></div>
+                  <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle on" data-role="admin" data-perm="analytics"></div></div>
+                  <div class="perm-row"><span>View AI chatbot</span><div class="toggle on" data-role="admin" data-perm="chatbot"></div></div>
+                  <div class="perm-row"><span>Configure AI restrictions</span><div class="toggle on" data-role="admin" data-perm="ai-config"></div></div>
+                  <div class="perm-row"><span>Manage user roles</span><div class="toggle on" data-role="admin" data-perm="manage-users"></div></div>
+                  <div class="perm-row"><span>View activity logs</span><div class="toggle on" data-role="admin" data-perm="activity-log"></div></div>
+                  <div class="perm-row"><span>Place orders</span><div class="toggle on" data-role="admin" data-perm="place-orders"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Laboratory -->
+            <div class="role-block" id="rb-lab">
+              <div class="role-block-hdr" onclick="toggleRole('lab')">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span class="um-role-badge ur-lab">Laboratory</span>
+                  <span style="font-size:12px;font-weight:500;">Lab Researchers &amp; EHS Officers</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:10px;color:var(--text3);">3 users</span>
+                  <span class="rb-arrow">▾</span>
+                </div>
+              </div>
+              <div class="role-block-body" id="rbb-lab" style="display:none;">
+                <div class="perm-section-title">Access &amp; Visibility</div>
+                <div class="perm-grid">
+                  <div class="perm-row"><span>View all chemical inventory</span><div class="toggle on" data-role="lab" data-perm="view-inventory"></div></div>
+                  <div class="perm-row"><span>Add / edit chemicals</span><div class="toggle off" data-role="lab" data-perm="edit-chemicals"></div></div>
+                  <div class="perm-row"><span>Approve chemical entries</span><div class="toggle off" data-role="lab" data-perm="approve-chemicals"></div></div>
+                  <div class="perm-row"><span>View restricted chemicals</span><div class="toggle on" data-role="lab" data-perm="view-restricted"></div></div>
+                  <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle off" data-role="lab" data-perm="analytics"></div></div>
+                  <div class="perm-row"><span>View AI chatbot</span><div class="toggle on" data-role="lab" data-perm="chatbot"></div></div>
+                  <div class="perm-row"><span>Configure AI restrictions</span><div class="toggle off" data-role="lab" data-perm="ai-config"></div></div>
+                  <div class="perm-row"><span>Manage user roles</span><div class="toggle off" data-role="lab" data-perm="manage-users"></div></div>
+                  <div class="perm-row"><span>View activity logs</span><div class="toggle off" data-role="lab" data-perm="activity-log"></div></div>
+                  <div class="perm-row"><span>Place orders</span><div class="toggle on" data-role="lab" data-perm="place-orders"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Compliance -->
+            <div class="role-block" id="rb-comp">
+              <div class="role-block-hdr" onclick="toggleRole('comp')">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span class="um-role-badge ur-comp">Compliance</span>
+                  <span style="font-size:12px;font-weight:500;">EHS &amp; Compliance Officers</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:10px;color:var(--text3);">1 user</span>
+                  <span class="rb-arrow">▾</span>
+                </div>
+              </div>
+              <div class="role-block-body" id="rbb-comp" style="display:none;">
+                <div class="perm-section-title">Access &amp; Visibility</div>
+                <div class="perm-grid">
+                  <div class="perm-row"><span>View all chemical inventory</span><div class="toggle on" data-role="comp" data-perm="view-inventory"></div></div>
+                  <div class="perm-row"><span>Add / edit chemicals</span><div class="toggle off" data-role="comp" data-perm="edit-chemicals"></div></div>
+                  <div class="perm-row"><span>Approve chemical entries</span><div class="toggle on" data-role="comp" data-perm="approve-chemicals"></div></div>
+                  <div class="perm-row"><span>View restricted chemicals</span><div class="toggle on" data-role="comp" data-perm="view-restricted"></div></div>
+                  <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle on" data-role="comp" data-perm="analytics"></div></div>
+                  <div class="perm-row"><span>View AI chatbot</span><div class="toggle on" data-role="comp" data-perm="chatbot"></div></div>
+                  <div class="perm-row"><span>Configure AI restrictions</span><div class="toggle off" data-role="comp" data-perm="ai-config"></div></div>
+                  <div class="perm-row"><span>Manage user roles</span><div class="toggle off" data-role="comp" data-perm="manage-users"></div></div>
+                  <div class="perm-row"><span>View activity logs</span><div class="toggle on" data-role="comp" data-perm="activity-log"></div></div>
+                  <div class="perm-row"><span>Place orders</span><div class="toggle off" data-role="comp" data-perm="place-orders"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Marketing -->
+            <div class="role-block" id="rb-mktg">
+              <div class="role-block-hdr" onclick="toggleRole('mktg')">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span class="um-role-badge ur-mktg">Marketing</span>
+                  <span style="font-size:12px;font-weight:500;">Marketing &amp; Analytics Team</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:10px;color:var(--text3);">2 users</span>
+                  <span class="rb-arrow">▾</span>
+                </div>
+              </div>
+              <div class="role-block-body" id="rbb-mktg" style="display:none;">
+                <div class="perm-section-title">Access &amp; Visibility</div>
+                <div class="perm-grid">
+                  <div class="perm-row"><span>View all chemical inventory</span><div class="toggle off" data-role="mktg" data-perm="view-inventory"></div></div>
+                  <div class="perm-row"><span>Add / edit chemicals</span><div class="toggle off" data-role="mktg" data-perm="edit-chemicals"></div></div>
+                  <div class="perm-row"><span>Approve chemical entries</span><div class="toggle off" data-role="mktg" data-perm="approve-chemicals"></div></div>
+                  <div class="perm-row"><span>View restricted chemicals</span><div class="toggle off" data-role="mktg" data-perm="view-restricted"></div></div>
+                  <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle on" data-role="mktg" data-perm="analytics"></div></div>
+                  <div class="perm-row"><span>View AI chatbot</span><div class="toggle off" data-role="mktg" data-perm="chatbot"></div></div>
+                  <div class="perm-row"><span>Configure AI restrictions</span><div class="toggle off" data-role="mktg" data-perm="ai-config"></div></div>
+                  <div class="perm-row"><span>Manage user roles</span><div class="toggle off" data-role="mktg" data-perm="manage-users"></div></div>
+                  <div class="perm-row"><span>View activity logs</span><div class="toggle off" data-role="mktg" data-perm="activity-log"></div></div>
+                  <div class="perm-row"><span>Place orders</span><div class="toggle off" data-role="mktg" data-perm="place-orders"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User -->
+            <div class="role-block" id="rb-user">
+              <div class="role-block-hdr" onclick="toggleRole('user')">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span class="um-role-badge ur-user">User</span>
+                  <span style="font-size:12px;font-weight:500;">Standard / Consumer Users</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:10px;color:var(--text3);">12 users</span>
+                  <span class="rb-arrow">▾</span>
+                </div>
+              </div>
+              <div class="role-block-body" id="rbb-user" style="display:none;">
+                <div class="perm-section-title">Access &amp; Visibility</div>
+                <div class="perm-grid">
+                  <div class="perm-row"><span>View all chemical inventory</span><div class="toggle off" data-role="user" data-perm="view-inventory"></div></div>
+                  <div class="perm-row"><span>Add / edit chemicals</span><div class="toggle off" data-role="user" data-perm="edit-chemicals"></div></div>
+                  <div class="perm-row"><span>Approve chemical entries</span><div class="toggle off" data-role="user" data-perm="approve-chemicals"></div></div>
+                  <div class="perm-row"><span>View restricted chemicals</span><div class="toggle off" data-role="user" data-perm="view-restricted"></div></div>
+                  <div class="perm-row"><span>Access analytics dashboard</span><div class="toggle off" data-role="user" data-perm="analytics"></div></div>
+                  <div class="perm-row"><span>View AI chatbot</span><div class="toggle on" data-role="user" data-perm="chatbot"></div></div>
+                  <div class="perm-row"><span>Configure AI restrictions</span><div class="toggle off" data-role="user" data-perm="ai-config"></div></div>
+                  <div class="perm-row"><span>Manage user roles</span><div class="toggle off" data-role="user" data-perm="manage-users"></div></div>
+                  <div class="perm-row"><span>View activity logs</span><div class="toggle off" data-role="user" data-perm="activity-log"></div></div>
+                  <div class="perm-row"><span>Place orders</span><div class="toggle on" data-role="user" data-perm="place-orders"></div></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── USERS TAB ── -->
+        <div id="umUsersPane" style="display:none;">
+          <div class="um-toolbar">
+            <input class="um-search" id="umSearch" placeholder="Search by name, email, or role..." />
+            <button class="um-add-btn" id="umAddBtn">+ Add User</button>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+            <table class="um-table">
+              <thead><tr><th>User</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="umTableBody">
+                <tr data-name="jacob prats" data-role="admin"><td><div class="um-name-cell"><div class="um-avatar">JP</div><div><div class="um-name">Jacob Prats</div><div class="um-email">j.prats@jnj.com</div></div></div></td><td><span class="um-role-badge ur-admin">Admin</span></td><td>IT &amp; Systems</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                <tr data-name="sarah chen" data-role="laboratory"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(68,153,255,0.15);color:#66AAFF;">SC</div><div><div class="um-name">Sarah Chen</div><div class="um-email">s.chen@jnj.com</div></div></div></td><td><span class="um-role-badge ur-lab">Laboratory</span></td><td>R&amp;D Labs</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                <tr data-name="marcus williams" data-role="compliance"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(200,140,0,0.15);color:#FFB700;">MW</div><div><div class="um-name">Marcus Williams</div><div class="um-email">m.williams@jnj.com</div></div></div></td><td><span class="um-role-badge ur-comp">Compliance</span></td><td>EHS &amp; Safety</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                <tr data-name="priya patel" data-role="marketing"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(130,0,210,0.15);color:#CC88FF;">PP</div><div><div class="um-name">Priya Patel</div><div class="um-email">p.patel@jnj.com</div></div></div></td><td><span class="um-role-badge ur-mktg">Marketing</span></td><td>Marketing &amp; Analytics</td><td><span class="status-dot s-pending"></span>Pending</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+                <tr data-name="tom nguyen" data-role="user"><td><div class="um-name-cell"><div class="um-avatar" style="background:rgba(90,90,90,0.25);color:#aaa;">TN</div><div><div class="um-name">Tom Nguyen</div><div class="um-email">t.nguyen@jnj.com</div></div></div></td><td><span class="um-role-badge ur-user">User</span></td><td>Procurement</td><td><span class="status-dot s-active"></span>Active</td><td><button class="um-action-btn um-remove">Remove</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="um-modal-overlay" id="umModal">
+      <div class="um-modal">
+        <h3>Add New User</h3>
+        <div class="um-field"><label>Full Name</label><input type="text" id="umNewName" placeholder="e.g. Jane Smith" /></div>
+        <div class="um-field"><label>Email</label><input type="text" id="umNewEmail" placeholder="e.g. j.smith@jnj.com" /></div>
+        <div class="um-field"><label>Department</label><input type="text" id="umNewDept" placeholder="e.g. R&amp;D Labs" /></div>
+        <div class="um-field"><label>Role</label>
+          <select id="umNewRole">
+            <option value="admin">Admin</option>
+            <option value="laboratory">Laboratory</option>
+            <option value="compliance">Compliance</option>
+            <option value="marketing">Marketing</option>
+            <option value="user" selected>User</option>
+          </select>
+        </div>
+        <div class="um-modal-btns">
+          <button class="um-modal-cancel" id="umModalCancel">Cancel</button>
+          <button class="um-modal-save" id="umModalSave">Add User</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── PAGE: CHATBOT ── -->
     <div class="page" id="page-chatbot">
       <div class="topbar">
@@ -391,7 +662,7 @@
 <script>
   // ── Navigation ──
   var navItems = document.querySelectorAll('.nav-item');
-  var pageMap = { dashboard: 'page-dashboard', inventory: 'page-inventory', chatbot: 'page-chatbot', placeholder: 'page-placeholder' };
+  var pageMap = { dashboard: 'page-dashboard', inventory: 'page-inventory', chatbot: 'page-chatbot', usermgmt: 'page-usermgmt', placeholder: 'page-placeholder' };
 
   navItems.forEach(function(item) {
     item.addEventListener('click', function() {
@@ -524,6 +795,155 @@
   sendBtn.addEventListener('click', function() { sendMessage(chatInput.value); });
   chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendMessage(chatInput.value); });
   document.querySelectorAll('.chip').forEach(function(chip) { chip.addEventListener('click', function() { sendMessage(chip.textContent); }); });
+  // ── User Management ──
+  function switchUmTab(tab) {
+    document.getElementById('umRolesPane').style.display = tab === 'roles' ? 'block' : 'none';
+    document.getElementById('umUsersPane').style.display = tab === 'users'  ? 'block' : 'none';
+    document.getElementById('tabRoles').classList.toggle('active', tab === 'roles');
+    document.getElementById('tabUsers').classList.toggle('active', tab === 'users');
+  }
+
+  function toggleRole(id) {
+    var block = document.getElementById('rb-' + id);
+    var body  = document.getElementById('rbb-' + id);
+    var isOpen = block.classList.contains('open');
+    block.classList.toggle('open', !isOpen);
+    body.style.display = isOpen ? 'none' : 'block';
+  }
+
+  document.querySelectorAll('.toggle').forEach(function(tog) {
+    tog.addEventListener('click', function() {
+      tog.classList.toggle('on');
+      tog.classList.toggle('off');
+    });
+  });
+
+  document.getElementById('umSearch').addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('#umTableBody tr').forEach(function(row) {
+      row.style.display = (!q || row.dataset.name.includes(q) || row.dataset.role.includes(q)) ? '' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.um-remove').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var row = btn.closest('tr');
+      row.style.transition = 'opacity 0.35s ease';
+      row.style.opacity = '0';
+      setTimeout(function() { row.remove(); }, 380);
+    });
+  });
+
+  var umModal = document.getElementById('umModal');
+  document.getElementById('umAddBtn').addEventListener('click', function() { umModal.style.display = 'flex'; });
+  document.getElementById('umModalCancel').addEventListener('click', function() { umModal.style.display = 'none'; });
+  umModal.addEventListener('click', function(e) { if (e.target === umModal) umModal.style.display = 'none'; });
+
+  var avColorsMap = { admin:'', laboratory:'background:rgba(68,153,255,0.15);color:#66AAFF', compliance:'background:rgba(200,140,0,0.15);color:#FFB700', marketing:'background:rgba(130,0,210,0.15);color:#CC88FF', user:'background:rgba(90,90,90,0.25);color:#aaa' };
+  var roleClassMap = { admin:'ur-admin', laboratory:'ur-lab', compliance:'ur-comp', marketing:'ur-mktg', user:'ur-user' };
+
+  document.getElementById('umModalSave').addEventListener('click', function() {
+    var name = document.getElementById('umNewName').value.trim();
+    var email = document.getElementById('umNewEmail').value.trim();
+    var dept = document.getElementById('umNewDept').value.trim();
+    var role = document.getElementById('umNewRole').value;
+    if (!name) return;
+    var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+    var roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+    var avStyle = avColorsMap[role] || '';
+    var roleClass = roleClassMap[role] || 'ur-user';
+    var tr = document.createElement('tr');
+    tr.dataset.name = name.toLowerCase(); tr.dataset.role = role;
+    tr.style.opacity = '0'; tr.style.transition = 'opacity 0.3s ease';
+    tr.innerHTML = '<td><div class="um-name-cell"><div class="um-avatar" style="' + avStyle + '">' + initials + '</div><div><div class="um-name">' + name + '</div><div class="um-email">' + (email||'—') + '</div></div></div></td>' +
+      '<td><span class="um-role-badge ' + roleClass + '">' + roleLabel + '</span></td>' +
+      '<td>' + (dept||'—') + '</td><td><span class="status-dot s-pending"></span>Pending</td>' +
+      '<td><button class="um-action-btn um-remove">Remove</button></td>';
+    document.getElementById('umTableBody').appendChild(tr);
+    setTimeout(function() { tr.style.opacity = '1'; }, 20);
+    tr.querySelector('.um-remove').addEventListener('click', function() {
+      tr.style.transition = 'opacity 0.35s ease'; tr.style.opacity = '0';
+      setTimeout(function() { tr.remove(); }, 380);
+    });
+    ['umNewName','umNewEmail','umNewDept'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('umNewRole').value = 'user';
+    umModal.style.display = 'none';
+  });
+
+  // ── Manage Chemicals navigates to inventory ──
+  document.querySelectorAll('.qbtn').forEach(function(btn) {
+    if (btn.textContent.trim() === 'Manage Chemicals') {
+      btn.addEventListener('click', function() {
+        navItems.forEach(function(n) { n.classList.remove('active'); });
+        document.querySelector('.nav-item[data-page="inventory"]').classList.add('active');
+        Object.values(pageMap).forEach(function(id) { document.getElementById(id).classList.remove('active'); });
+        document.getElementById('page-inventory').classList.add('active');
+      });
+    }
+  });
+
+  // ── Live ticking timestamps ──
+  var alertTimes = [0, 2, 14];
+  function updateTimestamps() {
+    var subs = document.querySelectorAll('.alert-sub');
+    var labels = [
+      function(m) { return m === 0 ? 'Formaldehyde flagged · just now' : 'Formaldehyde flagged · ' + m + ' min ago'; },
+      function(m) { return 'Unusual bulk order · ' + m + ' min ago'; },
+      function(m) { return 'User ADM-302 · ' + m + ' min ago'; }
+    ];
+    subs.forEach(function(sub, i) {
+      if (labels[i]) sub.textContent = labels[i](alertTimes[i]);
+    });
+  }
+  setInterval(function() {
+    alertTimes = alertTimes.map(function(t) { return t + 1; });
+    updateTimestamps();
+  }, 60000);
+
+  // ── Reject confirmation modal ──
+  var modal = document.createElement('div');
+  modal.id = 'rejectModal';
+  modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1000;align-items:center;justify-content:center;';
+  modal.innerHTML = '<div style="background:#222;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:28px 32px;width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">' +
+    '<div style="font-size:28px;margin-bottom:12px;">⚠️</div>' +
+    '<div style="font-size:15px;font-weight:600;margin-bottom:6px;">Reject Chemical?</div>' +
+    '<div style="font-size:12px;color:#999;margin-bottom:24px;" id="rejectChemName">This action cannot be undone.</div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;">' +
+    '<button id="rejectCancel" style="flex:1;background:#2a2a2a;border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">Cancel</button>' +
+    '<button id="rejectConfirm" style="flex:1;background:rgba(204,0,0,0.85);border:none;color:#fff;border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">Yes, Reject</button>' +
+    '</div></div>';
+  document.body.appendChild(modal);
+
+  var pendingRejectRow = null;
+  document.querySelectorAll('.ap-no').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      pendingRejectRow = btn.closest('.ap-row');
+      var name = pendingRejectRow.querySelector('span').textContent;
+      document.getElementById('rejectChemName').textContent = 'Reject "' + name + '"? This action cannot be undone.';
+      modal.style.display = 'flex';
+    });
+  });
+  document.getElementById('rejectCancel').addEventListener('click', function() {
+    modal.style.display = 'none'; pendingRejectRow = null;
+  });
+  document.getElementById('rejectConfirm').addEventListener('click', function() {
+    modal.style.display = 'none';
+    if (pendingRejectRow) {
+      pendingRejectRow.classList.add('dismissing');
+      setTimeout(function() {
+        pendingRejectRow.classList.add('dismissed');
+        var card = pendingRejectRow.closest('.card');
+        var remaining = card.querySelectorAll('.ap-row:not(.dismissed)');
+        if (remaining.length === 0) { var e = card.querySelector('.ap-empty'); if (e) e.style.display = 'block'; }
+        var stat = document.getElementById('pendingStat');
+        var cur = parseInt(stat.textContent); if (cur > 0) stat.textContent = cur - 1;
+        pendingRejectRow = null;
+      }, 400);
+    }
+  });
+  modal.addEventListener('click', function(e) { if (e.target === modal) { modal.style.display = 'none'; pendingRejectRow = null; } });
+
   // ── Inventory delete ──
   document.querySelectorAll('.abt-del').forEach(function(btn) {
     btn.addEventListener('click', function() {
