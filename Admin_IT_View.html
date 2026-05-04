@@ -15,7 +15,19 @@
       --font: 'Inter', sans-serif; --radius: 8px; --radius-lg: 12px;
     }
     body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5; height: 100vh; overflow: hidden; }
-    .app { display: flex; height: 100vh; }
+    .app-shell { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Top tab bar ── */
+    .top-nav { display: flex; align-items: center; background: #111; border-bottom: 1px solid var(--border); padding: 0 20px; flex-shrink: 0; height: 42px; gap: 2px; }
+    .top-nav-brand { font-family: Georgia,serif; font-size: 14px; font-style: italic; font-weight: 700; color: var(--red); margin-right: 18px; letter-spacing: -0.3px; white-space: nowrap; }
+    .top-tab { padding: 0 18px; height: 100%; display: flex; align-items: center; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+    .top-tab:hover { color: var(--text); }
+    .top-tab.active { color: var(--text); border-bottom-color: var(--red); font-weight: 600; }
+
+    /* ── Role views ── */
+    .role-view { display: none; flex: 1; overflow: hidden; }
+    .role-view.active { display: flex; }
+    .app { display: flex; height: 100%; width: 100%; }
 
     /* ── Sidebar ── */
     .sidebar { width: 205px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
@@ -217,10 +229,69 @@
     .send-btn { background: var(--red); border: none; border-radius: var(--radius); padding: 11px 24px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; font-family: var(--font); transition: background 0.12s; }
     .send-btn:hover { background: #aa0000; }
     .send-btn:disabled { background: var(--bg4); color: var(--text3); cursor: not-allowed; }
+
+    /* ── IT ADMIN STYLES ── */
+    .it-content { flex: 1; overflow-y: auto; padding: 20px 26px; }
+
+    /* Activity Log table */
+    .log-toolbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+    .log-search { flex: 1; min-width: 180px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 14px; font-size: 12px; color: var(--text); outline: none; font-family: var(--font); }
+    .log-search::placeholder { color: var(--text3); }
+    .log-search:focus { border-color: rgba(204,0,0,0.5); }
+    .it-dd-toggle { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 13px; font-size: 11px; font-weight: 500; color: var(--text2); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 7px; font-family: var(--font); transition: border-color 0.15s, color 0.15s; user-select: none; }
+    .it-dd-toggle:hover { border-color: rgba(255,255,255,0.18); color: var(--text); }
+    .it-dd-toggle.filtered { border-color: var(--red); color: var(--red-bright); }
+    .log-table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .log-table { width: 100%; border-collapse: collapse; }
+    .log-table thead tr { background: var(--bg3); border-bottom: 1px solid var(--border); }
+    .log-table th { text-align: left; font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.8px; text-transform: uppercase; padding: 11px 14px; }
+    .log-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+    .log-table tbody tr:last-child { border-bottom: none; }
+    .log-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+    .log-table td { padding: 10px 14px; font-size: 12px; vertical-align: middle; }
+    .log-badge { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    .lb-login    { background: rgba(68,153,255,0.15); color: #66AAFF; }
+    .lb-chemical { background: rgba(204,0,0,0.15); color: #FF7777; }
+    .lb-user     { background: rgba(130,0,210,0.15); color: #CC88FF; }
+    .lb-system   { background: rgba(90,90,90,0.22); color: #aaa; }
+    .lb-security { background: rgba(255,150,0,0.15); color: #FFB700; }
+    .sev-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+    .sev-info { background: #4499FF; } .sev-warn { background: #FFB700; } .sev-crit { background: #FF4444; }
+    .log-empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+
+    /* Security Controls */
+    .sec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .sec-stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+    .sec-stat-label { font-size: 10px; color: var(--text2); letter-spacing: 0.7px; text-transform: uppercase; font-weight: 500; margin-bottom: 8px; }
+    .sec-stat-val { font-size: 30px; font-weight: 700; letter-spacing: -1px; }
+    .sv-warn { color: #FFB700; } .sv-crit { color: #FF4444; } .sv-ok { color: #55DD55; } .sv-blue { color: #66AAFF; } .sv-red { color: var(--red-bright); }
+    .sec-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 16px; }
+    .locked-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .locked-row:last-of-type { border-bottom: none; }
+    .lock-av { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,68,68,0.15); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #FF7777; flex-shrink: 0; }
+    .lock-reason { font-size: 10px; color: var(--text3); margin-top: 2px; }
+    .unlock-btn { margin-left: auto; border: none; border-radius: 5px; padding: 4px 12px; font-size: 10px; font-weight: 600; background: rgba(68,153,255,0.15); color: #66AAFF; cursor: pointer; font-family: var(--font); transition: background 0.12s; }
+    .unlock-btn:hover { background: rgba(68,153,255,0.28); }
+    .sec-setting-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); }
+    .sec-setting-row:last-child { border-bottom: none; }
+    .sec-setting-val { font-weight: 600; color: var(--text); font-size: 12px; }
+    .it-sidebar { width: 205px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .it-av { width: 30px; height: 30px; border-radius: 50%; background: var(--red-dim); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--red-bright); flex-shrink: 0; }
   </style>
 </head>
 <body>
-<div class="app">
+<div class="app-shell">
+
+  <!-- ── TOP TAB BAR ── -->
+  <div class="top-nav">
+    <div class="top-nav-brand">J &amp; J MarketFlow</div>
+    <div class="top-tab active" data-role="admin">Admin</div>
+    <div class="top-tab" data-role="it">IT Admin</div>
+  </div>
+
+  <!-- ── ADMIN ROLE VIEW ── -->
+  <div class="role-view active" id="role-admin">
+  <div class="app">
 
   <!-- ── SIDEBAR ── -->
   <div class="sidebar">
@@ -656,12 +727,303 @@
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- end .main (admin) -->
+  </div><!-- end .app (admin) -->
+  </div><!-- end #role-admin -->
+
+  <!-- ── IT ADMIN ROLE VIEW ── -->
+  <div class="role-view" id="role-it">
+  <div class="app">
+
+    <!-- IT Sidebar -->
+    <div class="it-sidebar">
+      <div class="sb-brand">
+        <div style="font-family:Georgia,serif;font-size:20px;font-style:italic;font-weight:700;color:#CC0000;line-height:1.15;letter-spacing:-0.3px;">J &amp; J<span style="display:block;">MarketFlow</span></div>
+        <div style="font-size:9px;font-weight:600;color:#CC0000;letter-spacing:1.5px;text-transform:uppercase;margin-top:10px;opacity:0.75;">IT Dashboard</div>
+      </div>
+      <div class="nav">
+        <div class="it-nav-item nav-item active" data-itpage="it-dashboard">Dashboard</div>
+        <div class="it-nav-item nav-item" data-itpage="it-activitylog">Activity Log</div>
+        <div class="it-nav-item nav-item" data-itpage="it-security">Security Controls</div>
+        <div class="it-nav-item nav-item" data-itpage="it-placeholder">System Health</div>
+      </div>
+      <div class="sb-bottom">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="it-av">MK</div>
+          <div>
+            <div style="font-size:11px;font-weight:600;">Maya Kim</div>
+            <div style="font-size:9px;color:#555;margin-top:1px;">IT Admin · ID: IT-0091</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IT Main -->
+    <div class="main">
+
+      <!-- IT DASHBOARD -->
+      <div class="page active" id="page-it-dashboard">
+        <div class="topbar">
+          <div class="page-title">IT Overview</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:11px;color:#555;">Last logged in: May 3rd, 2026 · 9:12 AM</span>
+            <span style="background:rgba(204,0,0,0.18);color:#FF6666;font-size:10px;font-weight:600;padding:3px 11px;border-radius:20px;letter-spacing:0.4px;">IT ADMINISTRATOR</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="stats-row">
+            <div class="stat"><div class="stat-label">Failed Logins (24h)</div><div class="stat-val" style="color:#FFB700;">7</div></div>
+            <div class="stat"><div class="stat-label">Locked Accounts</div><div class="stat-val" style="color:#FF4444;">3</div></div>
+            <div class="stat"><div class="stat-label">Active Sessions</div><div class="stat-val" style="color:#55DD55;">14</div></div>
+            <div class="stat"><div class="stat-label">Security Alerts</div><div class="stat-val" style="color:#FF6666;">2</div></div>
+          </div>
+          <div class="two-col">
+            <div class="col">
+              <div class="card">
+                <div class="card-title">Recent Security Events</div>
+                <div class="alert-row"><div class="adot" style="background:#FF4444;margin-top:4px;"></div><div style="flex:1"><div class="alert-title">Brute Force Attempt</div><div class="alert-sub">User lab.user@jnj.com · 5 failed logins · 3 min ago</div></div></div>
+                <div class="alert-row"><div class="adot" style="background:#FFB700;margin-top:4px;"></div><div style="flex:1"><div class="alert-title">Off-Hours Access</div><div class="alert-sub">User m.williams@jnj.com · login at 2:14 AM · 6 hrs ago</div></div></div>
+                <div class="alert-row"><div class="adot" style="background:#FF6666;margin-top:4px;"></div><div style="flex:1"><div class="alert-title">New Device Login</div><div class="alert-sub">User p.patel@jnj.com · unrecognized device · 1 hr ago</div></div></div>
+              </div>
+              <div class="card">
+                <div class="card-title">Quick Actions</div>
+                <button class="qbtn" style="background:rgba(68,153,255,0.1);border-color:rgba(68,153,255,0.22);color:#FF6666;" onclick="switchITPage('it-activitylog')">View Activity Log</button>
+                <button class="qbtn" style="background:rgba(68,153,255,0.1);border-color:rgba(68,153,255,0.22);color:#FF6666;" onclick="switchITPage('it-security')">Manage Locked Accounts</button>
+                <button class="qbtn" style="background:rgba(68,153,255,0.1);border-color:rgba(68,153,255,0.22);color:#FF6666;" onclick="switchITPage('it-placeholder')">System Health</button>
+              </div>
+            </div>
+            <div class="col">
+              <div class="card">
+                <div class="card-title">Session Overview</div>
+                <div class="role-row"><span>Admin sessions</span><span style="color:#FF7777;font-weight:600;">2</span></div>
+                <div class="role-row"><span>Lab sessions</span><span style="color:#FF6666;font-weight:600;">5</span></div>
+                <div class="role-row"><span>Marketing sessions</span><span style="color:#CC88FF;font-weight:600;">3</span></div>
+                <div class="role-row"><span>User sessions</span><span style="color:#aaa;font-weight:600;">4</span></div>
+                <div class="role-row" style="border:none;"><span>Avg session duration</span><span style="color:#55DD55;font-weight:600;">22 min</span></div>
+              </div>
+              <div class="card">
+                <div class="card-title">MFA Status</div>
+                <div class="role-row"><span>MFA Enabled Users</span><span style="color:#55DD55;font-weight:600;">18 / 20</span></div>
+                <div class="role-row"><span>MFA Pending Setup</span><span style="color:#FFB700;font-weight:600;">2</span></div>
+                <div class="role-row" style="border:none;"><span>Last MFA policy update</span><span style="color:#aaa;font-weight:600;">Apr 28</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IT ACTIVITY LOG -->
+      <div class="page" id="page-it-activitylog">
+        <div class="topbar">
+          <div class="page-title">Activity Log</div>
+          <span style="font-size:11px;color:#555;">All system actions — timestamped and auditable</span>
+        </div>
+        <div class="it-content">
+          <div class="log-toolbar">
+            <input class="log-search" id="logSearch" placeholder="Search by user, action, or description..." />
+            <div class="dropdown" id="logTypeDrop">
+              <div class="it-dd-toggle" id="logTypeToggle">Filter by Type <span class="dd-arrow">▾</span></div>
+              <div class="dd-menu">
+                <div class="dd-item sel" data-val="all">All Types</div>
+                <div class="dd-sep"></div>
+                <div class="dd-item" data-val="login">Login / Auth</div>
+                <div class="dd-item" data-val="chemical">Chemical</div>
+                <div class="dd-item" data-val="user">User Mgmt</div>
+                <div class="dd-item" data-val="security">Security</div>
+                <div class="dd-item" data-val="system">System</div>
+              </div>
+            </div>
+            <div class="dropdown" id="logSevDrop">
+              <div class="it-dd-toggle" id="logSevToggle">Severity <span class="dd-arrow">▾</span></div>
+              <div class="dd-menu">
+                <div class="dd-item sel" data-val="all">All</div>
+                <div class="dd-sep"></div>
+                <div class="dd-item" data-val="info">Info</div>
+                <div class="dd-item" data-val="warn">Warning</div>
+                <div class="dd-item" data-val="crit">Critical</div>
+              </div>
+            </div>
+          </div>
+          <div class="log-table-wrap">
+            <table class="log-table" id="logTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Action</th>
+                  <th>Severity</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="logBody">
+                <tr data-type="security" data-sev="crit">
+                  <td style="color:var(--text3);white-space:nowrap;">May 03 · 09:47 AM</td>
+                  <td>lab.user@jnj.com</td>
+                  <td><span class="log-badge lb-security">Security</span></td>
+                  <td>Failed login × 5</td>
+                  <td><span class="sev-dot sev-crit"></span>Critical</td>
+                  <td style="color:var(--text3);">Account auto-locked after threshold exceeded</td>
+                </tr>
+                <tr data-type="chemical" data-sev="warn">
+                  <td style="color:var(--text3);white-space:nowrap;">May 03 · 09:31 AM</td>
+                  <td>j.prats@jnj.com</td>
+                  <td><span class="log-badge lb-chemical">Chemical</span></td>
+                  <td>Rejected entry: Acetone</td>
+                  <td><span class="sev-dot sev-warn"></span>Warning</td>
+                  <td style="color:var(--text3);">Admin rejected pending chemical approval</td>
+                </tr>
+                <tr data-type="login" data-sev="info">
+                  <td style="color:var(--text3);white-space:nowrap;">May 03 · 09:12 AM</td>
+                  <td>it-admin@jnj.com</td>
+                  <td><span class="log-badge lb-login">Login</span></td>
+                  <td>Login successful</td>
+                  <td><span class="sev-dot sev-info"></span>Info</td>
+                  <td style="color:var(--text3);">MFA verified · Chrome · Windows</td>
+                </tr>
+                <tr data-type="user" data-sev="info">
+                  <td style="color:var(--text3);white-space:nowrap;">May 03 · 08:55 AM</td>
+                  <td>j.prats@jnj.com</td>
+                  <td><span class="log-badge lb-user">User Mgmt</span></td>
+                  <td>Added user: p.patel@jnj.com</td>
+                  <td><span class="sev-dot sev-info"></span>Info</td>
+                  <td style="color:var(--text3);">Role assigned: Marketing · Status: Pending</td>
+                </tr>
+                <tr data-type="security" data-sev="warn">
+                  <td style="color:var(--text3);white-space:nowrap;">May 03 · 02:14 AM</td>
+                  <td>m.williams@jnj.com</td>
+                  <td><span class="log-badge lb-security">Security</span></td>
+                  <td>Off-hours login</td>
+                  <td><span class="sev-dot sev-warn"></span>Warning</td>
+                  <td style="color:var(--text3);">Login outside 8AM–6PM window flagged</td>
+                </tr>
+                <tr data-type="chemical" data-sev="info">
+                  <td style="color:var(--text3);white-space:nowrap;">May 02 · 04:30 PM</td>
+                  <td>j.prats@jnj.com</td>
+                  <td><span class="log-badge lb-chemical">Chemical</span></td>
+                  <td>Approved entry: Tylenol</td>
+                  <td><span class="sev-dot sev-info"></span>Info</td>
+                  <td style="color:var(--text3);">Risk: Low · Category: Pain Relief</td>
+                </tr>
+                <tr data-type="system" data-sev="info">
+                  <td style="color:var(--text3);white-space:nowrap;">May 02 · 02:00 AM</td>
+                  <td>system</td>
+                  <td><span class="log-badge lb-system">System</span></td>
+                  <td>Automated backup completed</td>
+                  <td><span class="sev-dot sev-info"></span>Info</td>
+                  <td style="color:var(--text3);">Full DB backup · 2.4 GB · AWS S3</td>
+                </tr>
+                <tr data-type="login" data-sev="warn">
+                  <td style="color:var(--text3);white-space:nowrap;">May 02 · 11:03 AM</td>
+                  <td>p.patel@jnj.com</td>
+                  <td><span class="log-badge lb-login">Login</span></td>
+                  <td>Login: new device</td>
+                  <td><span class="sev-dot sev-warn"></span>Warning</td>
+                  <td style="color:var(--text3);">Unrecognized device fingerprint detected</td>
+                </tr>
+                <tr data-type="user" data-sev="crit">
+                  <td style="color:var(--text3);white-space:nowrap;">May 01 · 03:22 PM</td>
+                  <td>unknown</td>
+                  <td><span class="log-badge lb-security">Security</span></td>
+                  <td>Unauthorized access attempt</td>
+                  <td><span class="sev-dot sev-crit"></span>Critical</td>
+                  <td style="color:var(--text3);">Restricted chemical page · IP flagged</td>
+                </tr>
+                <tr data-type="system" data-sev="info">
+                  <td style="color:var(--text3);white-space:nowrap;">May 01 · 08:00 AM</td>
+                  <td>system</td>
+                  <td><span class="log-badge lb-system">System</span></td>
+                  <td>Session timeout sweep</td>
+                  <td><span class="sev-dot sev-info"></span>Info</td>
+                  <td style="color:var(--text3);">4 inactive sessions cleared (15-min rule)</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="log-empty" id="logEmpty" style="display:none;">No log entries match the selected filters.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IT SECURITY CONTROLS -->
+      <div class="page" id="page-it-security">
+        <div class="topbar">
+          <div class="page-title">Security Controls</div>
+          <span style="font-size:11px;color:#555;">Account lockouts, failed logins, and session policy</span>
+        </div>
+        <div class="it-content">
+          <div class="sec-grid">
+            <div class="sec-stat"><div class="sec-stat-label">Failed Logins (24h)</div><div class="sec-stat-val sv-warn">7</div></div>
+            <div class="sec-stat"><div class="sec-stat-label">Locked Accounts</div><div class="sec-stat-val sv-crit" id="lockedCount">3</div></div>
+            <div class="sec-stat"><div class="sec-stat-label">MFA Compliance</div><div class="sec-stat-val sv-ok">90%</div></div>
+            <div class="sec-stat"><div class="sec-stat-label">Open Security Alerts</div><div class="sec-stat-val sv-red">2</div></div>
+          </div>
+
+          <div class="sec-card">
+            <div class="card-title">Locked Accounts</div>
+            <div id="lockedList">
+              <div class="locked-row" id="lock-1">
+                <div class="lock-av">LU</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:600;">lab.user@jnj.com</div>
+                  <div class="lock-reason">5 failed login attempts · Locked May 03 · 09:47 AM</div>
+                </div>
+                <button class="unlock-btn" onclick="unlockAccount('lock-1')">Unlock</button>
+              </div>
+              <div class="locked-row" id="lock-2">
+                <div class="lock-av">RK</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:600;">r.kumar@jnj.com</div>
+                  <div class="lock-reason">Suspicious off-hours access · Locked May 02 · 03:15 AM</div>
+                </div>
+                <button class="unlock-btn" onclick="unlockAccount('lock-2')">Unlock</button>
+              </div>
+              <div class="locked-row" id="lock-3">
+                <div class="lock-av">GH</div>
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:600;">g.harris@jnj.com</div>
+                  <div class="lock-reason">Unauthorized restricted page access · Locked May 01</div>
+                </div>
+                <button class="unlock-btn" onclick="unlockAccount('lock-3')">Unlock</button>
+              </div>
+              <div style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0;display:none;" id="noLocked">No accounts currently locked</div>
+            </div>
+          </div>
+
+          <div class="sec-card">
+            <div class="card-title">Session &amp; Authentication Policy (FR 17)</div>
+            <div class="sec-setting-row"><span>MFA required for all admin logins</span><span class="sec-setting-val" style="color:#55DD55;">Enabled</span></div>
+            <div class="sec-setting-row"><span>Session timeout (inactivity)</span><span class="sec-setting-val">15 minutes</span></div>
+            <div class="sec-setting-row"><span>Failed login lockout threshold</span><span class="sec-setting-val">5 attempts</span></div>
+            <div class="sec-setting-row"><span>Account lockout duration</span><span class="sec-setting-val">10 minutes</span></div>
+            <div class="sec-setting-row"><span>Audit log retention period</span><span class="sec-setting-val">3 years</span></div>
+            <div class="sec-setting-row"><span>Daily automated DB backup</span><span class="sec-setting-val" style="color:#55DD55;">Active</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IT PLACEHOLDER: System Health -->
+      <div class="page" id="page-it-placeholder">
+        <div class="topbar">
+          <div class="page-title">System Health</div>
+        </div>
+        <div class="content" style="display:flex;align-items:center;justify-content:center;flex:1;">
+          <div style="text-align:center;color:var(--text3);">
+            <div style="font-size:52px;margin-bottom:16px;">🖥️</div>
+            <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">System Health Coming Soon</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">Server uptime, backup status, and infrastructure monitoring will live here</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end .main (IT) -->
+  </div><!-- end .app (IT) -->
+  </div><!-- end #role-it -->
+
+</div><!-- end .app-shell -->
 
 <script>
-  // ── Navigation ──
-  var navItems = document.querySelectorAll('.nav-item');
+  // ── Navigation (Admin only — exclude IT nav items) ──
+  var navItems = document.querySelectorAll('#role-admin .nav-item');
   var pageMap = { dashboard: 'page-dashboard', inventory: 'page-inventory', chatbot: 'page-chatbot', usermgmt: 'page-usermgmt', placeholder: 'page-placeholder' };
 
   navItems.forEach(function(item) {
@@ -669,8 +1031,9 @@
       navItems.forEach(function(n) { n.classList.remove('active'); });
       item.classList.add('active');
       var pageKey = item.dataset.page;
-      Object.values(pageMap).forEach(function(id) { document.getElementById(id).classList.remove('active'); });
-      document.getElementById(pageMap[pageKey]).classList.add('active');
+      Object.values(pageMap).forEach(function(id) { var el = document.getElementById(id); if(el) el.classList.remove('active'); });
+      var target = document.getElementById(pageMap[pageKey]);
+      if (target) target.classList.add('active');
       if (pageKey === 'placeholder') {
         document.getElementById('placeholderTitle').textContent = item.textContent;
         document.getElementById('placeholderEmoji').textContent = item.dataset.emoji || '⚙️';
@@ -952,6 +1315,117 @@
       setTimeout(function() { card.style.display = 'none'; }, 420);
     });
   });
-</script>
+
+  // ── TOP TAB SWITCHER ──
+  document.querySelectorAll('.top-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.top-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var role = tab.dataset.role;
+      document.querySelectorAll('.role-view').forEach(function(v) { v.classList.remove('active'); });
+      document.getElementById('role-' + role).classList.add('active');
+    });
+  });
+
+  // ── IT NAV ──
+  var itPageMap = {
+    'it-dashboard':   'page-it-dashboard',
+    'it-activitylog': 'page-it-activitylog',
+    'it-security':    'page-it-security',
+    'it-placeholder': 'page-it-placeholder'
+  };
+
+  function switchITPage(key) {
+    document.querySelectorAll('.it-nav-item').forEach(function(n) { n.classList.remove('active'); });
+    var navEl = document.querySelector('.it-nav-item[data-itpage="' + key + '"]');
+    if (navEl) navEl.classList.add('active');
+    Object.values(itPageMap).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+    var target = document.getElementById(itPageMap[key]);
+    if (target) target.classList.add('active');
+  }
+
+  document.querySelectorAll('.it-nav-item').forEach(function(item) {
+    item.addEventListener('click', function() { switchITPage(item.dataset.itpage); });
+  });
+
+  // ── ACTIVITY LOG filters ──
+  var activeLogType = 'all', activeLogSev = 'all';
+
+  function setupITDrop(dropId, toggleId, onPick) {
+    var drop = document.getElementById(dropId);
+    var tog  = document.getElementById(toggleId);
+    if (!drop || !tog) return;
+    tog.addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.querySelectorAll('.dropdown.open').forEach(function(d) { if (d !== drop) d.classList.remove('open'); });
+      drop.classList.toggle('open');
+    });
+    drop.querySelectorAll('.dd-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        drop.querySelectorAll('.dd-item').forEach(function(i) { i.classList.remove('sel'); });
+        item.classList.add('sel');
+        drop.classList.remove('open');
+        onPick(item.dataset.val, item.textContent.trim(), tog);
+      });
+    });
+  }
+
+  setupITDrop('logTypeDrop', 'logTypeToggle', function(val, label, tog) {
+    activeLogType = val;
+    tog.innerHTML = (val === 'all' ? 'Filter by Type' : label) + ' <span class="dd-arrow">▾</span>';
+    tog.classList.toggle('filtered', val !== 'all');
+    applyLogFilters();
+  });
+
+  setupITDrop('logSevDrop', 'logSevToggle', function(val, label, tog) {
+    activeLogSev = val;
+    tog.innerHTML = (val === 'all' ? 'Severity' : label) + ' <span class="dd-arrow">▾</span>';
+    tog.classList.toggle('filtered', val !== 'all');
+    applyLogFilters();
+  });
+
+  var logSearch = document.getElementById('logSearch');
+  if (logSearch) {
+    logSearch.addEventListener('input', applyLogFilters);
+  }
+
+  function applyLogFilters() {
+    var query = (logSearch ? logSearch.value.toLowerCase() : '');
+    var rows = document.querySelectorAll('#logBody tr');
+    var visible = 0;
+    rows.forEach(function(row) {
+      var typeMatch = activeLogType === 'all' || row.dataset.type === activeLogType;
+      var sevMatch  = activeLogSev  === 'all' || row.dataset.sev  === activeLogSev;
+      var text = row.textContent.toLowerCase();
+      var textMatch = !query || text.includes(query);
+      var show = typeMatch && sevMatch && textMatch;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    var empty = document.getElementById('logEmpty');
+    if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  // ── UNLOCK accounts ──
+  function unlockAccount(id) {
+    var row = document.getElementById(id);
+    if (!row) return;
+    row.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(40px)';
+    setTimeout(function() {
+      row.remove();
+      var count = document.getElementById('lockedCount');
+      var cur = parseInt(count.textContent);
+      if (cur > 0) count.textContent = cur - 1;
+      var remaining = document.querySelectorAll('#lockedList .locked-row');
+      if (remaining.length === 0) {
+        document.getElementById('noLocked').style.display = 'block';
+      }
+    }, 380);
+  }</script>
 </body>
 </html>
