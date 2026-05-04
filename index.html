@@ -473,7 +473,26 @@
     <script>
         const ctx = document.getElementById('wasteChart').getContext('2d');
         let currentRole = 'waste';
+        let currentNav = 'Home';
         let charts = {};
+
+        const chemicals = [
+          { name: 'Hydrochloric Acid', cas: '7647-01-0', classification: 'Hazardous Material', stock: 324, price: '$25.99' },
+          { name: 'Sulfuric Acid', cas: '7664-93-9', classification: 'Hazardous Material', stock: 67, price: '$32.40' },
+          { name: 'Nitric Acid', cas: '7697-37-2', classification: 'Hazardous Material', stock: 45, price: '$28.50' },
+          { name: 'Phosphoric Acid', cas: '7664-38-2', classification: 'Hazardous Material', stock: 89, price: '$22.75' },
+          { name: 'Sodium Hydroxide', cas: '1310-73-2', classification: 'Corrosive', stock: 156, price: '$18.50' },
+          { name: 'Potassium Hydroxide', cas: '1310-58-3', classification: 'Corrosive', stock: 78, price: '$20.30' },
+          { name: 'Acetic Acid', cas: '64-19-7', classification: 'Flammable', stock: 89, price: '$12.75' },
+          { name: 'Ethanol', cas: '64-17-5', classification: 'Flammable', stock: 245, price: '$15.20' },
+          { name: 'Acetone', cas: '67-64-1', classification: 'Flammable', stock: 178, price: '$11.95' },
+          { name: 'Toluene', cas: '108-88-3', classification: 'Flammable', stock: 92, price: '$16.30' },
+          { name: 'Benzene', cas: '71-43-2', classification: 'Flammable', stock: 134, price: '$19.80' },
+          { name: 'Hexane', cas: '110-54-3', classification: 'Flammable', stock: 67, price: '$14.25' },
+          { name: 'Methanol', cas: '67-56-1', classification: 'Toxic', stock: 134, price: '$14.80' },
+          { name: 'Formaldehyde', cas: '50-00-0', classification: 'Toxic', stock: 56, price: '$17.90' },
+          { name: 'Sodium Cyanide', cas: '143-33-9', classification: 'Toxic', stock: 23, price: '$45.00' }
+        ];
 
         const roleConfig = {
           waste: {
@@ -487,7 +506,7 @@
             label: 'Role: Customer',
             avatar: 'C',
             nav: ['Home', 'Products', 'AI Chatbot'],
-            active: 'Products',
+            active: 'Home',
             filters: true
           },
           researcher: {
@@ -508,6 +527,7 @@
           btn.classList.add('active');
 
           currentRole = role;
+          currentNav = roleConfig[role].active;
           
           const config = roleConfig[role];
           document.getElementById('roleLabel').textContent = config.label;
@@ -536,11 +556,13 @@
           nav.innerHTML = '';
           r.nav.forEach(item => {
             const el = document.createElement('div');
-            el.className = 'nav-item' + (item === r.active ? ' active' : '');
+            el.className = 'nav-item' + (item === currentNav ? ' active' : '');
             el.textContent = item;
             el.onclick = () => {
               document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
               el.classList.add('active');
+              currentNav = item;
+              renderContent();
             };
             nav.appendChild(el);
           });
@@ -564,7 +586,7 @@
             bottom.appendChild(fbtn);
 
             const filterDefs = [
-              { label: 'Product Classification', id: 'filterProduct', opts: ['All', 'Cardiopulmonary', 'Diabetes', 'Immunology', 'Infectious Diseases', 'Neuroscience', 'Oncology', 'Rare Disease', 'Urology']},
+              { label: 'Product Classification', id: 'filterProduct', opts: ['All', 'Hazardous Material', 'Corrosive', 'Flammable', 'Toxic']},
               { label: 'Date Range', id: 'filterDate', opts: ['All Time', 'Weekly', 'Monthly', 'Yearly']},
               { label: 'Region', id: 'filterRegion', opts: ['All Regions', 'North America', 'Europe']},
               { label: 'Customer Demographic', id: 'filterDemo', opts: ['All', 'Retail Buyers', 'Labratories', 'Consumers']}
@@ -590,6 +612,11 @@
             const apply = document.createElement('button');
             apply.className = 'applyButton';
             apply.textContent = 'Apply Filter';
+            apply.onclick = () => {
+              if (currentRole === 'customer' && currentNav === 'Home') {
+                filterChemicals();
+              }
+            };
             bottom.appendChild(apply);
           }
         }
@@ -600,9 +627,63 @@
           el.style.display = 'block';
 
           if (currentRole === 'waste') el.innerHTML = wasteHTML();
-          else if (currentRole === 'customer') el.innerHTML = customerHTML();
+          else if (currentRole === 'customer') {
+            if (currentNav === 'Home') {
+              el.innerHTML = customerHomeHTML();
+
+            }
+            else if (currentNav === 'Products') el.innerHTML = customerHTML();
+            else el.innerHTML = '<div class="info-card" style="padding: 24px;"><p>AI Chatbot content here.</p></div>';
+          }
           else el.innerHTML = researcherHTML();
         }
+
+          /* Customer Home Search Page */
+          function customerHomeHTML() {
+            return `
+              <div style="padding: 24px;">
+                <div style="margin-bottom: 20px;">
+                  <h2 style="margin-bottom: 16px; color: var(--text-primary);">Chemical Search</h2>
+                  <div style="display: flex; gap: 12px; align-items: center;">
+                    <input type="text" id="searchInput" placeholder="Search chemicals..." style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-med); border-radius: var(--radius-md); background: var(--bg-secondary); color: var(--text-primary);" onkeyup="filterChemicals()">
+                    <select id="classFilter" onchange="filterChemicals()" style="padding: 8px 12px; border: 1px solid var(--border-med); border-radius: var(--radius-md); background: var(--bg-secondary); color: var(--text-primary);">
+                      <option value="">All Classifications</option>
+                      <option value="Hazardous Material">Hazardous Material</option>
+                      <option value="Corrosive">Corrosive</option>
+                      <option value="Flammable">Flammable</option>
+                      <option value="Toxic">Toxic</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="info-card" style="padding: 0;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="background: var(--bg-secondary);">
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-med);">Name</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-med);">CAS Number</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-med);">Classification</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-med);">Stock</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-med);">Price</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-med);">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="chemicalTableBody">
+                      ${chemicals.map(chem => `
+                        <tr>
+                          <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.name}</td>
+                          <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.cas}</td>
+                          <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.classification}</td>
+                          <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.stock}</td>
+                          <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.price}</td>
+                          <td style="padding: 12px; border-bottom: 1px solid var(--border-light);"><button class="reportButton" onclick="viewProduct('${chem.name}')">View</button></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }
 
           /* Customer Page */
           function customerHTML() {
@@ -726,6 +807,42 @@
                 </div>
               </div>`;
           }
+
+        // Global functions for customer home
+        window.filterChemicals = function() {
+          const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+          const classFilter = document.getElementById('classFilter')?.value || '';
+          const productFilter = document.getElementById('filterProduct')?.value || '';
+
+          const filteredChemicals = chemicals.filter(chem => {
+            const matchesSearch = !searchTerm || chem.name.toLowerCase().includes(searchTerm) || chem.cas.includes(searchTerm);
+            const matchesClass = !classFilter || chem.classification === classFilter;
+            const matchesProduct = !productFilter || productFilter === 'All' || chem.classification === productFilter;
+            return matchesSearch && matchesClass && matchesProduct;
+          });
+
+          const tbody = document.getElementById('chemicalTableBody');
+          if (tbody) {
+            tbody.innerHTML = filteredChemicals.map(chem => `
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.name}</td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.cas}</td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.classification}</td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.stock}</td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${chem.price}</td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border-light);"><button class="reportButton" onclick="viewProduct('${chem.name}')">View</button></td>
+              </tr>
+            `).join('');
+          }
+        };
+
+        window.viewProduct = function(name) {
+          // Switch to Products tab and show the product
+          currentNav = 'Products';
+          renderSidebar();
+          renderContent();
+          // Could add logic to show specific product based on name
+        };
 
         // 1. Map Stuff
         const dashboardData = {
